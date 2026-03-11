@@ -6,6 +6,7 @@ import { errorHandler } from "./middleware/error.middleware";
 import { connectDB } from "./config/database";
 import productRoutes from "./modules/products/product.routes";
 import lotRoutes from "./modules/lots/lot.routes";
+import saleRoutes from "./modules/sales/sale.routes";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 
 app.use("/api/products", productRoutes);
 app.use("/api", lotRoutes);
+app.use("/api/sales", saleRoutes);
 app.use(errorHandler); // Global error handler (always after routes are defined)
 
 app.get("/", (req, res) => {

@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import { createLot, getLotsByProduct } from "./lot.service";
+import { asyncHandler } from "../../utils/asyncHandler";
 
-export const createLotController = async (req: Request, res: Response) => {
+export const createLotController = asyncHandler(async (req: Request, res: Response) => {
     const productIdParam = req.params.productId as string;
 
     if (!mongoose.Types.ObjectId.isValid(productIdParam)) {
@@ -20,9 +21,9 @@ export const createLotController = async (req: Request, res: Response) => {
     });
 
     res.status(201).json(lots);
-};
+});
 
-export const getLotsByProductController = async (req: Request, res: Response) => {
+export const getLotsByProductController = asyncHandler(async (req: Request, res: Response) => {
     const productIdParam = req.params.productId as string;
 
     if(!mongoose.Types.ObjectId.isValid(productIdParam)) {
@@ -35,4 +36,4 @@ export const getLotsByProductController = async (req: Request, res: Response) =>
     const lots = await getLotsByProduct(productId);
 
     res.status(200).json(lots);
-};
+});
