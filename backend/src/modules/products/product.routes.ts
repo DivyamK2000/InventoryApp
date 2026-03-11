@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
     createProductController,
-    getAllProductsController,
+    getAllProductController,
     getProductByIdController,
     deleteProductController
 } from "./product.controller";
@@ -9,7 +9,7 @@ import {
 const router = Router();
 
 router.post("/", createProductController);
-router.post("/", getAllProductsController);
+router.post("/", getAllProductController);
 router.post("/:id", getProductByIdController);
 router.post("/:id", deleteProductController);
 
