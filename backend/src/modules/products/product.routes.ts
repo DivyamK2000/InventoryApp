@@ -5,12 +5,28 @@ import {
     getProductByIdController,
     deleteProductController
 } from "./product.controller";
+import { validateRequest } from "../../utils/validateRequests";
+import { createProductSchema, productIdParamSchema } from "./product.validation";
 
 const router = Router();
 
-router.post("/", createProductController);
-router.post("/", getAllProductController);
-router.post("/:id", getProductByIdController);
-router.post("/:id", deleteProductController);
+router.post(
+    "/",
+    validateRequest(createProductSchema),
+    createProductController
+);
+
+router.get("/", getAllProductController);
+
+router.get(
+    "/:id",
+    validateRequest(productIdParamSchema, "params"), 
+    getProductByIdController
+);
+router.delete(
+    "/:id",
+    validateRequest(productIdParamSchema, "params"),
+    deleteProductController
+);
 
 export default router;

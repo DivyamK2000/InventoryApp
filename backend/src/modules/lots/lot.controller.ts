@@ -3,15 +3,8 @@ import mongoose from "mongoose";
 import { createLot, getLotsByProduct } from "./lot.service";
 import { asyncHandler } from "../../utils/asyncHandler";
 
-export const createLotController = asyncHandler(async (req: Request, res: Response) => {
-    const productIdParam = req.params.productId as string;
-
-    if (!mongoose.Types.ObjectId.isValid(productIdParam)) {
-        res.status(400);
-        throw new Error("Invalid productId");
-    }
-
-    const productId = new mongoose.Types.ObjectId(productIdParam);
+export const createLotController = asyncHandler(async (req: Request<{ productId: string }>, res: Response) => {
+    const productId = new mongoose.Types.ObjectId(req.params.productId);
 
     const lots = await createLot({
         productId,
@@ -23,15 +16,8 @@ export const createLotController = asyncHandler(async (req: Request, res: Respon
     res.status(201).json(lots);
 });
 
-export const getLotsByProductController = asyncHandler(async (req: Request, res: Response) => {
-    const productIdParam = req.params.productId as string;
-
-    if(!mongoose.Types.ObjectId.isValid(productIdParam)) {
-        res.status(400);
-        throw new Error("Invalid productId");
-    }
-
-    const productId = new mongoose.Types.ObjectId(productIdParam);
+export const getLotsByProductController = asyncHandler(async (req: Request<{ productId: string }>, res: Response) => {
+    const productId = new mongoose.Types.ObjectId(req.params.productId);
 
     const lots = await getLotsByProduct(productId);
 
