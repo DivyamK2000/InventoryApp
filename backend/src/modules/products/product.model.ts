@@ -7,7 +7,9 @@ export interface IProduct extends Document {
     category?: string;
     isActive: boolean;
     createdAt: Date;
-    deletedAlt?: Date;
+    deletedAt?: Date;
+    lowStockThreshold?: number;
+    hasExpiry?: boolean;
 }
 
 const ProductSchema: Schema = new Schema(
@@ -38,6 +40,14 @@ const ProductSchema: Schema = new Schema(
         },
         deletedAt: {
             type: Date
+        },
+        hasExpiry: {
+            type: Boolean,
+            default: false
+        },
+        lowStockThreshold: {
+            type: Number,
+            default: 5
         }
     },
     {

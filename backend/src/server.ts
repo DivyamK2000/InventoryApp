@@ -8,6 +8,7 @@ import productRoutes from "./modules/products/product.routes";
 import lotRoutes from "./modules/lots/lot.routes";
 import saleRoutes from "./modules/sales/sale.routes";
 import scanRoutes from "./modules/scan/scan.routes";
+import expressListEndpoints from "express-list-endpoints";
 
 dotenv.config();
 
@@ -36,6 +37,8 @@ const startServer = async () => {
 
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
+
+        console.log(expressListEndpoints(app));
     });
 };
 

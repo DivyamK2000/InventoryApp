@@ -10,7 +10,8 @@ export const createLotController = asyncHandler(async (req: Request<{ productId:
         productId,
         purchasePrice: req.body.purchasePrice,
         quantityInitial: req.body.quantityInitial,
-        quantityRemaining: req.body.quantityInitial
+        quantityRemaining: req.body.quantityInitial,
+        expiryDate: req.body.expiryDate
     });
 
     res.status(201).json(lots);

@@ -7,6 +7,7 @@ export interface ILot extends Document {
     quantityRemaining: number;
     purchaseDate: Date;
     createdAt: Date;
+    expiryDate?: Date;
 }
 
 const LotSchema: Schema = new Schema(
@@ -31,6 +32,10 @@ const LotSchema: Schema = new Schema(
         purchaseDate: {
             type: Date,
             default: Date.now
+        },
+        expiryDate: {
+            type: Date,
+            required: false
         }
     },
     {

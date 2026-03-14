@@ -7,7 +7,9 @@ export const createProductSchema = z.object({
     name: z.string().trim().min(1),
     productCode: z.string().min(1),
     codeFormat: z.enum(["barcode", "qr"]),
-    category: z.string().trim().optional()
+    category: z.string().trim().optional(),
+    lowStockThreshold: z.number().min(0).optional(),
+    hasExpiry: z.boolean().optional()
 });
 
 export const productIdParamSchema = z.object({
