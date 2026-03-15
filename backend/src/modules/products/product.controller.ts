@@ -8,9 +8,16 @@ import {
 } from "./product.service";
 
 export const createProductController = asyncHandler(async (req: Request, res: Response) => {
-    const product = await createProduct(req.body);
+    const userId = "dev-user-id";
 
-    res.status(201).json(product);
+    const product = await createProduct({
+        ...req.body,
+        userId
+    });
+
+    res.status(201).json({
+        data: product
+    });
 });
 
 export const getAllProductController = asyncHandler(async (req: Request, res: Response) => {

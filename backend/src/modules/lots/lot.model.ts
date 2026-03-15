@@ -2,6 +2,8 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface ILot extends Document {
     productId: mongoose.Types.ObjectId;
+    productCode: string;
+    lotCode: string;
     purchasePrice: number;
     quantityInitial: number;
     quantityRemaining: number;
@@ -15,6 +17,14 @@ const LotSchema: Schema = new Schema(
         productId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Product",
+            required: true
+        },
+        productCode: {
+            type: String,
+            rquired: true
+        },
+        lotCode: {
+            type: String,
             required: true
         },
         purchasePrice: {

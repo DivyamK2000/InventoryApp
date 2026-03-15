@@ -1,17 +1,15 @@
 import { z } from "zod";
 
-const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/);
-
 export const createProductSchema = z.object({
-    userId: objectIdSchema,
-    name: z.string().trim().min(1),
-    productCode: z.string().min(1),
-    codeFormat: z.enum(["barcode", "qr"]),
-    category: z.string().trim().optional(),
-    lowStockThreshold: z.number().min(0).optional(),
-    hasExpiry: z.boolean().optional()
-});
+    name: z.string().min(2, "Product name must be at least 2 characters").max(120),
 
-export const productIdParamSchema = z.object({
-    id: objectIdSchema
+    prefix: z.string().max(4).optional(),
+
+    category: z.string().max(100).optional(),
+
+    codeFormat: z.enum(["barcode", "qr"]),
+
+    lowStockThreshold: z.number().min(0).optional(),
+
+    hasExpiry: z.boolean().optional()
 })
