@@ -43,4 +43,6 @@ const LotSchema: Schema = new Schema(
     }
 );
 
+LotSchema.index({ productId: 1, expiryDate: 1 });
+
 export default mongoose.model<ILot>("Lot", LotSchema);

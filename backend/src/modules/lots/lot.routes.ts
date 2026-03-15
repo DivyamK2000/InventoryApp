@@ -9,12 +9,12 @@ import { validateRequest } from "../../utils/validateRequests";
 const router = Router();
 
 router.post(
-    "/products/:productId/lots",
+    "/:productId/lots",
     validateRequest(createLotSchema),
     createLotController
 );
 
-router.get("/products/:productId/lots", getLotsByProductController);
+router.get("/:productId/lots", getLotsByProductController);
 
 export default router;
 
