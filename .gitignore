@@ -1,0 +1,14 @@
+node_modules/
+.env
+npm-debug.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# build folders
+dist/
+build/
+
+#api test folder
+backend/apiTest/
