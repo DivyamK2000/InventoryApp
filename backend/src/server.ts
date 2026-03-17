@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { errorHandler } from "./middleware/error.middleware";
 import { connectDB } from "./config/database";
 
+import userRoutes from "./modules/users/user.routes";
 import productRoutes from "./modules/products/product.routes";
 import lotRoutes from "./modules/lots/lot.routes";
 import saleRoutes from "./modules/sales/sale.routes";
@@ -28,8 +29,9 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
-app.use("/api/products", lotRoutes);
+app.use("/api/lots", lotRoutes);
 app.use("/api/sales", saleRoutes);
 app.use("/api/scan", scanRoutes);
 app.use("/api/inventory", inventoryRoutes);
