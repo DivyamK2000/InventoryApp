@@ -1,32 +1,28 @@
 import Product, { IProduct } from "./product.model";
+import { createProductDTO } from "./product.validation";
 
 const generatorPrefix = (name: string): string => {
-    const cleaned = name.replace(/[^a-zA-Z]/g, "");
-
-    const words = cleaned.split(/\s+/);
+    const words = name.trim().split(/\s+/);
 
     if(words.length === 1) {
         return words[0].substring(0, 3).toUpperCase();
     }
 
     if(words.length === 2) {
-        return words[1].substring(0, 3).toUpperCase();
+        return words.map(w => w[0]).join("").toUpperCase();
     }
 
-    return words
-    .slice(0, 3)
-    .map(word => word[0])
-    .join("")
-    .toUpperCase();
+    return words.slice(0, 3).map(w => w[0]).join("").toUpperCase();
 };
 
-const generateProductCode = async (prefix: string): Promise<string> => {
-    const lastProduct = await Product.findOne({ prefix }).sort({ createdAt: -1 });
+const generateProductCode = async (userId: string, prefix: string) => {
+    const lastProduct = await Product.findOne({ userId, prefix }).sort({ productCode: -1 });
 
     let nextNumber = 1;
 
     if(lastProduct) {
-        const lastNumber = parseInt(lastProduct.productCode.split("-")[1]);
+        const parts = lastProduct.productCode.split("-")
+        const lastNumber = parseInt(parts[1], 10) || 0;
         nextNumber = lastNumber + 1; 
     }
 
@@ -35,35 +31,49 @@ const generateProductCode = async (prefix: string): Promise<string> => {
     return `${prefix}-${formattedNumber}`;
 }
 
-export const createProduct = async (data: Partial<IProduct>) => {
-    const prefix = data.prefix || generatorPrefix(data.name!);
+export const createProduct = async (data: createProductDTO) => {
+    const prefix = data.prefix || generatorPrefix(data.name!).toUpperCase().trim();
 
-    const productCode = await generateProductCode(prefix);
+    const productCode = await generateProductCode(data.userId, prefix);
 
-    const product = new Product({
-        ...data,
-        prefix,
+    const existing =  await Product.findOne({
+        userId: data.userId,
         productCode
     });
 
-    return await product.save();
+    if(existing) {
+        throw new Error("Product code already exists");
+    }
+
+    const product = new Product({
+        userId: data.userId,
+        name: data.name,
+        prefix,
+        productCode,
+        codeFormat: data.codeFormat,
+        category: data.category,
+        lowStockThreshold: data.lowStockThreshold,
+        hasExpiry: data.hasExpiry
+    });
+
+    return product.save();
 };
 
-export const getAllProducts = async () => {
-    return await Product.find({ isActive: true });
+export const getAllProducts = async (userId: string) => {
+    return await Product.find({ userId, isActive: true });
 };
 
-export const getProductById = async (id: String) => {
-    return await Product.findById(id);
+export const getProductById = async (id: string, userId: string) => {
+    return await Product.findOne({ _id: id, userId });
 };
 
-export const softDeleteProduct = async (id: String) => {
-    return await Product.findByIdAndUpdate(
-        id,
+export const softDeleteProduct = async (id: string, userId: string) => {
+    return await Product.findOneAndUpdate(
+        { _id: id, userId },
         {
             isActive: false,
             deletedAt: new Date()
         },
-        { new: true }
+        { returnDocument: "after" }
     );
 };

@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
+
 export interface IProduct extends Document {
-    userId: string;
+    userId: mongoose.Types.ObjectId;
     name: string;
     prefix: string;
     productCode: string;
@@ -15,13 +16,29 @@ export interface IProduct extends Document {
 
 const ProductSchema: Schema = new Schema(
     {
-        userId: { type: String, required: true },
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
 
-        name: { type: String, required: true },
+        name: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
-        prefix: { type: String, required: true },
+        prefix: {
+            type: String,
+            required: true
+        },
 
-        productCode: { type: String, required: true },
+        productCode: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
         codeFormat: { 
             type: String, 
@@ -29,11 +46,30 @@ const ProductSchema: Schema = new Schema(
             required: true 
         },
 
-        category: { type: String },
-        isActive: { type: Boolean, default: true },
-        deletedAt: { type: Date },
-        hasExpiry: { type: Boolean, default: false },
-        lowStockThreshold: { type: Number, default: 5 }
+        category: {
+            type: String,
+            trim: true
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true
+        },
+
+        deletedAt: {
+            type: Date,
+            default: null
+        },
+
+        hasExpiry: {
+            type: Boolean,
+            default: false
+        },
+
+        lowStockThreshold: {
+            type: Number,
+            default: 5
+        }
     },
 
     { timestamps: true }

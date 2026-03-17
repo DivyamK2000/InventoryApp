@@ -1,11 +1,6 @@
 import User, { IUser } from "./user.model";
-import { z } from "zod";
 import bcrypt from "bcrypt";
-import { createUserSchema, loginUserSchema } from "./user.validation";
-
-type registerDTO = z.infer<typeof createUserSchema>;
-
-type loginDTO = z.infer<typeof loginUserSchema>;
+import { registerDTO, loginDTO } from "./user.validation";
 
 export const createUser = async(data: registerDTO) => {
     const existingUser = await findUserByEmail(data.email);
