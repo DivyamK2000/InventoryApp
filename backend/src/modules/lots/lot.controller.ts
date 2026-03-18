@@ -1,26 +1,27 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import mongoose from "mongoose";
 import { createLot, getLotsByProduct } from "./lot.service";
 import { asyncHandler } from "../../utils/asyncHandler";
+import { AuthRequest } from "../../middleware/auth.middleware";
 
-export const createLotController = asyncHandler(async (req: Request<{ productId: string }>, res: Response) => {
-    const productId = new mongoose.Types.ObjectId(req.params.productId);
+export const createLotController = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = new mongoose.Types.ObjectId(req.user!.id);
+    const productId = new mongoose.Types.ObjectId(req.params.productId as string);
 
-    const lots = await createLot({
+    const lots = await createLot(
+        req.body,
         productId,
-        purchasePrice: req.body.purchasePrice,
-        quantityInitial: req.body.quantityInitial,
-        quantityRemaining: req.body.quantityInitial,
-        expiryDate: req.body.expiryDate
-    });
+        userId
+    );
 
     res.status(201).json(lots);
 });
 
-export const getLotsByProductController = asyncHandler(async (req: Request<{ productId: string }>, res: Response) => {
-    const productId = new mongoose.Types.ObjectId(req.params.productId);
+export const getLotsByProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = new mongoose.Types.ObjectId(req.user!.id);
+    const productId = new mongoose.Types.ObjectId(req.params.productId as string);
 
-    const lots = await getLotsByProduct(productId);
+    const lots = await getLotsByProduct(productId, userId);
 
     res.status(200).json(lots);
 });

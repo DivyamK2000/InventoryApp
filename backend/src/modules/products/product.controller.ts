@@ -7,14 +7,15 @@ import {
     getProductById,
     softDeleteProduct
 } from "./product.service";
+import mongoose from "mongoose";
 
 export const createProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+    const userId = new mongoose.Types.ObjectId(req.user!.id);
 
-    const product = await createProduct({
-        ...req.body,
+    const product = await createProduct(
+        req.body,
         userId
-    });
+    );
 
     res.status(201).json({
         data: product

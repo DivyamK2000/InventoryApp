@@ -2,39 +2,43 @@ import Lot, { ILot } from "./lot.model";
 import mongoose from "mongoose";
 import { createMovement } from "../movements/movement.service";
 import Product from "../products/product.model";
+import { createLotDTO } from "./lot.validation";
+import { getNextSequence } from "../counters/counter.service";
 
-
-const generateLotCode = async (productCode: string) => {
-    const lastLot = await Lot.findOne({
-        lotCode: new RegExp(`^${productCode}-LOT`)
-    }).sort({ createdAt: -1 });
-
-    let nextNumber = 1;
-
-    if (lastLot) {
-        const lastNumber = parseInt(lastLot.lotCode.split("-L")[1]);
-        nextNumber = lastNumber + 1;
-    }
-
-    const formatted = String(nextNumber).padStart(2, "0");
-
-    return `${productCode}-L${formatted}`;
-}
-
-export const createLot = async (data: Partial<ILot>) => {
-    const product = await Product.findById(data.productId);
+export const createLot = async (
+    data: createLotDTO,
+    productId: mongoose.Types.ObjectId,
+    userId: mongoose.Types.ObjectId
+) => {
+    const product = await Product.findOne({
+        _id: productId,
+        userId
+    });
 
     if(!product) {
-        throw new Error("Product not found");
+        throw new Error("Product not found or unauthorized");
     }
 
     if(product.hasExpiry && !data.expiryDate) {
         throw new Error("Expiry date is required for products with expiry");
     }
 
-    const lotCode = await generateLotCode(product.productCode);
+    const counterKey =  `${userId.toString()}-lot-${productId.toString()}`;
 
-    const lot = new Lot(data);
+    const seq = await getNextSequence(counterKey);
+
+    const lotCode = `${product.productCode}-L${String(seq).padStart(2, "0")}`;
+
+    const lot = new Lot({
+        userId,
+        productId,
+        lotCode,
+        purchasePrice: data.purchasePrice,
+        quantityInitial: data.quantityInitial,
+        quantityRemaining: data.quantityInitial,
+        expiryDate: data.expiryDate
+    });
+
     await lot.save();
 
     await createMovement(
@@ -47,6 +51,12 @@ export const createLot = async (data: Partial<ILot>) => {
     return lot;
 };
 
-export const getLotsByProduct = async (productId: mongoose.Types.ObjectId) => {
-    return await Lot.find({ productId }).sort({ purchaseDate: 1 });
+export const getLotsByProduct = async (
+    productId: mongoose.Types.ObjectId,
+    userId: mongoose.Types.ObjectId
+) => {
+    return await Lot.find({
+        productId,
+        userId
+    }).sort({ purchaseDate: 1 });
 };

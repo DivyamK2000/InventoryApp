@@ -1,5 +1,7 @@
-import Product, { IProduct } from "./product.model";
+import mongoose from "mongoose";
+import Product from "./product.model";
 import { createProductDTO } from "./product.validation";
+import { getNextSequence } from "../counters/counter.service";
 
 const generatorPrefix = (name: string): string => {
     const words = name.trim().split(/\s+/);
@@ -15,38 +17,20 @@ const generatorPrefix = (name: string): string => {
     return words.slice(0, 3).map(w => w[0]).join("").toUpperCase();
 };
 
-const generateProductCode = async (userId: string, prefix: string) => {
-    const lastProduct = await Product.findOne({ userId, prefix }).sort({ productCode: -1 });
-
-    let nextNumber = 1;
-
-    if(lastProduct) {
-        const parts = lastProduct.productCode.split("-")
-        const lastNumber = parseInt(parts[1], 10) || 0;
-        nextNumber = lastNumber + 1; 
-    }
-
-    const formattedNumber = String(nextNumber).padStart(3, "0");
-
-    return `${prefix}-${formattedNumber}`;
-}
-
-export const createProduct = async (data: createProductDTO) => {
+export const createProduct = async (
+    data: createProductDTO,
+    userId: mongoose.Types.ObjectId
+) => {
     const prefix = data.prefix || generatorPrefix(data.name!).toUpperCase().trim();
 
-    const productCode = await generateProductCode(data.userId, prefix);
+    const counterKey = `${userId.toString()}-product-${prefix}`;
 
-    const existing =  await Product.findOne({
-        userId: data.userId,
-        productCode
-    });
+    const seq = await getNextSequence(counterKey);
 
-    if(existing) {
-        throw new Error("Product code already exists");
-    }
+    const productCode = await `${prefix}-${String(seq).padStart(3, "0")}`;
 
     const product = new Product({
-        userId: data.userId,
+        userId,
         name: data.name,
         prefix,
         productCode,

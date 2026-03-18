@@ -5,7 +5,8 @@ const objectIdSchema =  z.string().regex(/^[0-9a-fA-F]{24}$/)
 export const createProductSchema = z.object({
     name: z.string().trim().min(2, "Product name must be at least 2 characters").max(120),
 
-    prefix: z.string().trim().toUpperCase().min(2).max(4).optional(),
+    prefix: z.string().min(2).max(4).optional()
+        .transform((val) => val?.toUpperCase().trim()),
 
     category: z.string().trim().optional(),
 
@@ -20,8 +21,4 @@ export const productIdParamSchema = z.object({
     id: objectIdSchema
 });
 
-type createProductInput = z.infer<typeof createProductSchema>;
-
-export type createProductDTO = createProductInput & {
-    userId: string;
-} 
+export type createProductDTO = z.infer<typeof createProductSchema>;
