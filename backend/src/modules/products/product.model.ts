@@ -29,11 +29,6 @@ const ProductSchema: Schema = new Schema(
             trim: true
         },
 
-        prefix: {
-            type: String,
-            required: true
-        },
-
         productCode: {
             type: String,
             required: true,

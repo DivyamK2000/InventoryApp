@@ -6,7 +6,7 @@ export const createProductSchema = z.object({
     name: z.string().trim().min(2, "Product name must be at least 2 characters").max(120),
 
     prefix: z.string().min(2).max(4).optional()
-        .transform((val) => val?.toUpperCase().trim()),
+        .transform(val => val?.toUpperCase().trim()),
 
     category: z.string().trim().optional(),
 

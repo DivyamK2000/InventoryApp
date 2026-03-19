@@ -4,24 +4,34 @@ import { createProductDTO } from "./product.validation";
 import { getNextSequence } from "../counters/counter.service";
 
 const generatorPrefix = (name: string): string => {
-    const words = name.trim().split(/\s+/);
+    if (!name) return "PRD";
 
-    if(words.length === 1) {
-        return words[0].substring(0, 3).toUpperCase();
+    const clean = name
+        .replace(/[^a-zA-Z0-9 ]/g, "")
+        .trim()
+        .toUpperCase();
+
+    const words = clean.split(" ").filter(Boolean);
+
+    if(words.length == 1) {
+        return words[0].slice(0, 3).padEnd(3, "X");
     }
 
-    if(words.length === 2) {
-        return words.map(w => w[0]).join("").toUpperCase();
+    const initials = words.map(w => w[0]).join("");
+
+    if(initials.length >= 3) {
+        return initials.slice(0, 3);
     }
 
-    return words.slice(0, 3).map(w => w[0]).join("").toUpperCase();
+    const combined = words.join("");
+    return combined.slice(0, 3).padEnd(3, "X");
 };
 
 export const createProduct = async (
     data: createProductDTO,
     userId: mongoose.Types.ObjectId
 ) => {
-    const prefix = data.prefix || generatorPrefix(data.name!).toUpperCase().trim();
+    const prefix = data.prefix?.toUpperCase().trim() || generatorPrefix(data.name!).toUpperCase().trim();
 
     const counterKey = `${userId.toString()}-product-${prefix}`;
 
