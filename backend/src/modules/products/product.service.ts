@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Product from "./product.model";
-import { createProductDTO } from "./product.validation";
+import { CreateProductDTO } from "./product.validation";
 import { getNextSequence } from "../counters/counter.service";
 
 const generatorPrefix = (name: string): string => {
@@ -28,7 +28,7 @@ const generatorPrefix = (name: string): string => {
 };
 
 export const createProduct = async (
-    data: createProductDTO,
+    data: CreateProductDTO,
     userId: mongoose.Types.ObjectId
 ) => {
     const prefix = data.prefix?.toUpperCase().trim() || generatorPrefix(data.name!).toUpperCase().trim();

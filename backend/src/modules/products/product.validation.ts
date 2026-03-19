@@ -21,4 +21,4 @@ export const productIdParamSchema = z.object({
     id: objectIdSchema
 });
 
-export type createProductDTO = z.infer<typeof createProductSchema>;
+export type CreateProductDTO = z.infer<typeof createProductSchema>;

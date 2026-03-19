@@ -6,12 +6,11 @@ import { AuthRequest } from "../../middleware/auth.middleware";
 
 export const createLotController = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = new mongoose.Types.ObjectId(req.user!.id);
-    const productId = new mongoose.Types.ObjectId(req.params.productId as string);
-
+    
     const lots = await createLot(
-        req.body,
-        productId,
-        userId
+        userId,
+        req.body.productId,
+        req.body
     );
 
     res.status(201).json(lots);
@@ -19,9 +18,8 @@ export const createLotController = asyncHandler(async (req: AuthRequest, res: Re
 
 export const getLotsByProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = new mongoose.Types.ObjectId(req.user!.id);
-    const productId = new mongoose.Types.ObjectId(req.params.productId as string);
-
-    const lots = await getLotsByProduct(productId, userId);
+    
+    const lots = await getLotsByProduct(req.body.productId, userId);
 
     res.status(200).json(lots);
 });

@@ -2,54 +2,70 @@ import Lot, { ILot } from "./lot.model";
 import mongoose from "mongoose";
 import { createMovement } from "../movements/movement.service";
 import Product from "../products/product.model";
-import { createLotDTO } from "./lot.validation";
+import { CreateLotDTO } from "./lot.validation";
 import { getNextSequence } from "../counters/counter.service";
 
 export const createLot = async (
-    data: createLotDTO,
+    userId: mongoose.Types.ObjectId,
     productId: mongoose.Types.ObjectId,
-    userId: mongoose.Types.ObjectId
+    data: CreateLotDTO
 ) => {
-    const product = await Product.findOne({
-        _id: productId,
-        userId
-    });
+    const session = await mongoose.startSession();
 
-    if(!product) {
-        throw new Error("Product not found or unauthorized");
-    }
+    try {
+        return await session.withTransaction(async() => {
+            const product = await Product.findOne({
+                userId,
+                _id: productId
+                
+            }).session(session);
 
-    if(product.hasExpiry && !data.expiryDate) {
-        throw new Error("Expiry date is required for products with expiry");
-    }
+            if(!product) {
+                throw new Error("Product not found or unauthorized");
+            }
 
-    const counterKey =  `${userId.toString()}-lot-${productId.toString()}`;
+            if(product.hasExpiry && !data.expiryDate) {
+                throw new Error("Expiry date is required for products with expiry");
+            }
 
-    const seq = await getNextSequence(counterKey);
+            const counterKey =  `${userId.toString()}-lot-${productId.toString()}`;
 
-    const lotCode = `${product.productCode}-L${String(seq).padStart(2, "0")}`;
+            const seq = await getNextSequence(counterKey);
 
-    const lot = new Lot({
-        userId,
-        productId,
-        lotCode,
-        purchasePrice: data.purchasePrice,
-        quantityInitial: data.quantityInitial,
-        quantityRemaining: data.quantityInitial,
-        expiryDate: data.expiryDate
-    });
+            const lotCode = `${product.productCode}-L${String(seq).padStart(2, "0")}`;
 
-    await lot.save();
+            const lot = await Lot.create([{
+                userId,
+                productId,
+                lotCode,
+                purchasePrice: data.purchasePrice,
+                quantityInitial: data.quantityInitial,
+                quantityRemaining: data.quantityInitial,
+                expiryDate: data.expiryDate
+            }], { session });
 
-    await createMovement(
-        lot.productId,
-        "purchase",
-        lot.quantityInitial,
-        lot._id
-    );
+            const crLot = lot[0];
+
+            await crLot.save({ session });
+
+            await createMovement({
+                userId,
+                productId,
+                type: "purchase",
+                quantity: crLot.quantityInitial,
+                lotId: crLot._id,
+                lotCode: crLot.lotCode,
+                reference: `PUR:${crLot.lotCode}`
+            }, session);
     
-    return lot;
-};
+            return crLot;
+        });
+    }
+
+    finally {
+        session.endSession()
+    }
+}
 
 export const getLotsByProduct = async (
     productId: mongoose.Types.ObjectId,

@@ -1,18 +1,17 @@
 import mongoose from "mongoose";
 import Movement from "./movement.model";
+import { CreateMovementDTO, createMovementSchema } from "./movement.validation";
+
 
 export const createMovement = async (
-    productId: mongoose.Types.ObjectId,
-    type: "purchase" | "sale" | "adjustment",
-    quantity: number,
-    lotId?: mongoose.Types.ObjectId,
-    reference?: string
+    data: CreateMovementDTO,
+    session?: mongoose.ClientSession
+
 ) => {
-    return await Movement.create({
-        productId,
-        lotId,
-        type,
-        quantity,
-        reference
-    });
+
+    const validated = createMovementSchema.parse(data);
+
+    const movement = await Movement.create([validated], { session });
+
+    return movement[0]
 };

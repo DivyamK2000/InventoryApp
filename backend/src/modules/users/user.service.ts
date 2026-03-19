@@ -1,8 +1,8 @@
 import User, { IUser } from "./user.model";
 import bcrypt from "bcrypt";
-import { registerDTO, loginDTO } from "./user.validation";
+import { registerUserDTO, loginUserDTO } from "./user.validation";
 
-export const createUser = async(data: registerDTO) => {
+export const createUser = async(data: registerUserDTO) => {
     const existingUser = await findUserByEmail(data.email);
 
     if(existingUser){
@@ -20,7 +20,7 @@ export const createUser = async(data: registerDTO) => {
     return user.save();
 };
 
-export const loginUser = async(data: loginDTO) => {
+export const loginUser = async(data: loginUserDTO) => {
     if(!data.email || !data.password) {
         throw new Error("Password & E-mail can not be empty!");
     }

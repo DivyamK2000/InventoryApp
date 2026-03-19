@@ -1,6 +1,9 @@
+import mongoose from "mongoose";
 import { z } from "zod";
 
 export const createLotSchema = z.object({
+    productId:z.string()
+        .transform((val) => new mongoose.Types.ObjectId(val)),
     purchasePrice: z.number().positive(),
     quantityInitial: z.number().int().positive(),
     expiryDate: z.string().optional()
@@ -10,4 +13,4 @@ export const createLotSchema = z.object({
         })
 });
 
-export type createLotDTO = z.infer<typeof createLotSchema>;
+export type CreateLotDTO = z.infer<typeof createLotSchema>;
