@@ -2,6 +2,7 @@
 # Dependencies
 # ==============================
 node_modules/
+scripts/
 backend/node_modules/
 backend/apiTest/
 
@@ -71,3 +72,9 @@ images/
 # ==============================
 .DS_Store
 Thumbs.db
+
+# ==============================
+# Files
+# ==============================
+backend/mongo-init.js
+backend/start-mongo.ps1
