@@ -2,7 +2,7 @@ import Lot, { ILot } from "./lot.model";
 import mongoose from "mongoose";
 import { createMovement } from "../movements/movement.service";
 import Product from "../products/product.model";
-import { CreateLotDTO } from "./lot.validation";
+import { CreateLotDTO} from "./lot.validation";
 import { getNextSequence } from "../counters/counter.service";
 
 export const createLot = async (
@@ -27,9 +27,24 @@ export const createLot = async (
                 throw new Error("Product not found or unauthorized");
             }
 
-            if(product.hasExpiry && !data.expiryDate) {
-                throw new Error("Expiry date is required for products with expiry");
+            const lotData = {
+                purchasePrice: data.purchasePrice,
+                quantityInitial: data.quantityInitial,
+                purchaseDate: data.purchaseDate ?? new Date(),
+
+                ...(product.hasExpiry && {
+                    mfd: data.mfd,
+                    bestBefore: data.bestBefore
+                })
+            };
+
+            if(product.hasExpiry) {
+                if(!data.mfd || !data.bestBefore) {
+                    throw new Error("Expiry details required");
+                }
             }
+
+            
 
             const counterKey =  `${userId.toString()}-lot-${productId.toString()}`;
 
@@ -37,29 +52,25 @@ export const createLot = async (
 
             const lotCode = `${product.productCode}-L${String(seq).padStart(2, "0")}`;
 
-            const lot = await Lot.create([{
+            const [lot] = await Lot.create([{
                 userId,
                 productId,
                 lotCode,
-                purchasePrice: data.purchasePrice,
-                quantityInitial: data.quantityInitial,
+                ...lotData,
                 quantityRemaining: data.quantityInitial,
-                expiryDate: data.expiryDate
             }], { session });
-
-            const crLot = lot[0];
 
             await createMovement({
                 userId,
                 productId,
                 type: "purchase",
-                quantity: crLot.quantityInitial,
-                lotId: crLot._id,
-                lotCode: crLot.lotCode,
-                reference: `PUR:${crLot.lotCode}`
+                quantity: lot.quantityInitial,
+                lotId: lot._id,
+                lotCode: lot.lotCode,
+                reference: `PUR:${lot.lotCode}`
             }, session);
     
-            return crLot;
+            return lot;
         });
     }
 
@@ -69,12 +80,11 @@ export const createLot = async (
 }
 
 export const getLotsByProduct = async (
-    productId: mongoose.Types.ObjectId,
-    userId: mongoose.Types.ObjectId
+    userId: mongoose.Types.ObjectId,
+    productId: mongoose.Types.ObjectId
 ) => {
     return await Lot.find({
         userId,
         productId
     }).sort({ purchaseDate: 1 });
 };
-
