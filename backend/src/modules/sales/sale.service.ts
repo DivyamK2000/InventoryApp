@@ -33,6 +33,9 @@ export const createSale = async(
 
             const salesRecords = [];
 
+            let totalRevenue = 0;
+            let totalProfit = 0;
+
             for (const lot of lots) {
                 if(remainingQuantity <= 0) break;
 
@@ -68,6 +71,9 @@ export const createSale = async(
                     note: data.note
                 }, session);
 
+                totalRevenue += data.sellingPrice * quantityFromLot;
+                totalProfit += profit;
+
                 remainingQuantity -= quantityFromLot;
             }
 
@@ -75,7 +81,15 @@ export const createSale = async(
                 throw new Error("Insufficient stock");
             }
 
-            return salesRecords;
+            return {
+                summary: {
+                    totalQuantity: data.quantity,
+                    totalRevenue,
+                    totalProfit,
+                    lotsUsed: salesRecords.length
+                },
+                breakdown: salesRecords
+            };
         });
     }
     

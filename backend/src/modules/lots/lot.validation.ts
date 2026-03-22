@@ -1,9 +1,13 @@
 import mongoose from "mongoose";
 import { z } from "zod";
 
+const objectIdSchema = z.string()
+    .refine(val => mongoose.Types.ObjectId.isValid(val), {
+        message: "Invalid Id"
+    })
+    .transform(val => new mongoose.Types.ObjectId(val));
+
 export const createLotSchema = z.object({
-    productId:z.string()
-        .transform((val) => new mongoose.Types.ObjectId(val)),
     purchasePrice: z.number().positive(),
     quantityInitial: z.number().int().positive(),
     expiryDate: z.string().optional()
@@ -11,6 +15,14 @@ export const createLotSchema = z.object({
         .refine((date) => !date || !isNaN(date.getTime()), {
             message: "Invalid expiry date"
         })
+});
+
+export const productIdParamSchema = z.object({
+    id: objectIdSchema
+});
+
+export const lotIdParamSchema = z.object({
+    id: objectIdSchema
 });
 
 export type CreateLotDTO = z.infer<typeof createLotSchema>;

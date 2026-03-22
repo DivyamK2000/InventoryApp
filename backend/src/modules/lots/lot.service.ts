@@ -10,10 +10,13 @@ export const createLot = async (
     productId: mongoose.Types.ObjectId,
     data: CreateLotDTO
 ) => {
+    
     const session = await mongoose.startSession();
 
     try {
         return await session.withTransaction(async() => {
+            
+
             const product = await Product.findOne({
                 userId,
                 _id: productId
@@ -30,7 +33,7 @@ export const createLot = async (
 
             const counterKey =  `${userId.toString()}-lot-${productId.toString()}`;
 
-            const seq = await getNextSequence(counterKey);
+            const seq = await getNextSequence(counterKey, session);
 
             const lotCode = `${product.productCode}-L${String(seq).padStart(2, "0")}`;
 
@@ -45,8 +48,6 @@ export const createLot = async (
             }], { session });
 
             const crLot = lot[0];
-
-            await crLot.save({ session });
 
             await createMovement({
                 userId,
@@ -72,7 +73,8 @@ export const getLotsByProduct = async (
     userId: mongoose.Types.ObjectId
 ) => {
     return await Lot.find({
-        productId,
-        userId
+        userId,
+        productId
     }).sort({ purchaseDate: 1 });
 };
+

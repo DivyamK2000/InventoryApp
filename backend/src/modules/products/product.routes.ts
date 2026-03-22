@@ -5,17 +5,22 @@ import {
     createProductController,
     getAllProductController,
     getProductByIdController,
-    deleteProductController
+    deleteProductController,
+    updateProductController
 } from "./product.controller";
-import { createProductSchema, productIdParamSchema } from "./product.validation";
 
 const router = Router();
 
 router.post(
     "/",
     authMiddleware,
-    validateRequest(createProductSchema),
     createProductController
+);
+
+router.patch(
+    "/",
+    authMiddleware,
+    updateProductController
 );
 
 router.get(
@@ -27,13 +32,11 @@ router.get(
 router.get(
     "/:id",
     authMiddleware,
-    validateRequest(productIdParamSchema, "params"), 
     getProductByIdController
 );
 router.delete(
     "/:id",
     authMiddleware,
-    validateRequest(productIdParamSchema, "params"),
     deleteProductController
 );
 

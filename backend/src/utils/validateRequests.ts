@@ -1,15 +1,16 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodType } from "zod";
+import { treeifyError, ZodType } from "zod";
 
-export const validateRequest = (
-    schema: ZodType,
-    source: "body" | "params" = "body"
-) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        const validateData = schema.parse(req[source]);
+export const validateRequest = <T>( schema: ZodType<T>, source: unknown ): T => {
+    const validatedData = schema.safeParse(source);
 
-        Object.assign(req[source], validateData);
+    if(!validatedData.success) {
+        throw {
+            status: 400,
+            message: "Validation Failed",
+            errors: treeifyError(validatedData.error)
+        };
+    }
 
-        next();
-    };
+    return validatedData.data
 };

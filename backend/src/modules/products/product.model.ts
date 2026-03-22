@@ -3,15 +3,15 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IProduct extends Document {
     userId: mongoose.Types.ObjectId;
     name: string;
-    prefix: string;
     productCode: string;
     codeFormat: "barcode" | "qr";
     category?: string;
+    mrp: number;
+    hasExpiry: boolean;
+    lowStockThreshold: number;
     isActive: boolean;
     createdAt: Date;
     deletedAt?: Date;
-    lowStockThreshold?: number;
-    hasExpiry?: boolean;
 }
 
 const ProductSchema: Schema = new Schema(
@@ -46,16 +46,12 @@ const ProductSchema: Schema = new Schema(
             trim: true
         },
 
-        isActive: {
-            type: Boolean,
-            default: true
+        mrp: {
+            type: Number,
+            required: true,
+            min: 0
         },
-
-        deletedAt: {
-            type: Date,
-            default: null
-        },
-
+        
         hasExpiry: {
             type: Boolean,
             default: false
@@ -64,6 +60,16 @@ const ProductSchema: Schema = new Schema(
         lowStockThreshold: {
             type: Number,
             default: 5
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true
+        },
+
+        deletedAt: {
+            type: Date,
+            default: null
         }
     },
 
@@ -72,9 +78,7 @@ const ProductSchema: Schema = new Schema(
 
 ProductSchema.index(
     { userId: 1, productCode: 1 },
-    { unique: true}
+    { unique: true, partialFilterExpression: { isActive: true } }
 );
-
-ProductSchema.index({userId: 1, prefix: 1});
 
 export default mongoose.model<IProduct>("Product", ProductSchema);

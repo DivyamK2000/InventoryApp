@@ -9,7 +9,7 @@ backend/apiTest/
 # ==============================
 # Environment Variables
 # ==============================
-.env
+backend/.env
 .env.*
 !.env.example
 

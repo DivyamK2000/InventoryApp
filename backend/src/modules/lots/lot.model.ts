@@ -65,7 +65,7 @@ const LotSchema: Schema = new Schema(
 
 LotSchema.index(
     { userId: 1, lotCode: 1},
-{unique: true}
+    {unique: true}
 );
 
 LotSchema.index({ userId: 1, expiryDate: 1 });

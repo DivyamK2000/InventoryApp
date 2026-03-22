@@ -1,26 +1,49 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { 
     createProduct,
     getAllProducts,
     getProductById,
-    softDeleteProduct
+    softDeleteProduct,
+    updateProduct
 } from "./product.service";
-import mongoose from "mongoose";
+import { createProductSchema, productIdParamSchema, updateProductSchema } from "./product.validation";
+import { validateRequest } from "../../utils/validateRequests";
 
 export const createProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = new mongoose.Types.ObjectId(req.user!.id);
+    const userId = req.user!.id;
+
+    const body = validateRequest(createProductSchema, req.body);
 
     const product = await createProduct(
-        req.body,
-        userId
+        userId,
+        body
     );
 
     res.status(201).json({
         data: product
     });
 });
+
+export const updateProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user!.id;
+
+    const { id: productId } = validateRequest(
+        productIdParamSchema,
+        req.params
+    );
+
+    const body = validateRequest(updateProductSchema, req.body);
+
+    const product = await updateProduct(
+        userId,
+        productId,
+        body
+    )
+
+    res.status(200).json(product);
+})
 
 export const getAllProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
@@ -32,25 +55,31 @@ export const getAllProductController = asyncHandler(async (req: AuthRequest, res
 
 export const getProductByIdController = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
-
-    const product = await getProductById(
-        req.params.id as string,
-        userId
+    
+    const { id: productId } = validateRequest(
+        productIdParamSchema,
+        req.params
     );
 
-    if(!product) {
-        res.status(404);
-        throw new Error("Product not found");
-    }
+    const product = await getProductById(
+        userId,
+        productId
+    );
 
     res.status(200).json(product);
 });
 
 export const deleteProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
+    
+    const { id: productId } = validateRequest(
+        productIdParamSchema,
+        req.params
+    );
+
     const product = await softDeleteProduct(
-        req.params.id as string,
-        userId
+        userId,
+        productId
     );
 
     if(!product) {

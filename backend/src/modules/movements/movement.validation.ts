@@ -1,7 +1,17 @@
 import { z } from "zod";
 import mongoose from "mongoose";
 
-const objectId = z.string().transform((val) => new mongoose.Types.ObjectId(val));
+const objectId = z.union([
+    z.string().refine((val) => mongoose.Types.ObjectId.isValid(val),{
+        message: "Invalid ObjectId"
+    }),
+    z.instanceof(mongoose.Types.ObjectId)
+]).transform((val) => {
+    if (typeof val === "string") { 
+        return new mongoose.Types.ObjectId(val);
+    } 
+    return val;
+});
 
 export const movementTypes = ["purchase", "sale", "adjustment"] as const;
 

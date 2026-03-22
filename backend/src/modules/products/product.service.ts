@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import Product from "./product.model";
-import { CreateProductDTO } from "./product.validation";
+import { CreateProductDTO, UpdateProductDTO } from "./product.validation";
 import { getNextSequence } from "../counters/counter.service";
+import { notFoundError } from "../../utils/appError";
 
 const generatorPrefix = (name: string): string => {
     if (!name) return "PRD";
@@ -28,46 +29,87 @@ const generatorPrefix = (name: string): string => {
 };
 
 export const createProduct = async (
-    data: CreateProductDTO,
-    userId: mongoose.Types.ObjectId
+    userId: mongoose.Types.ObjectId,
+    data: CreateProductDTO
 ) => {
-    const prefix = data.prefix?.toUpperCase().trim() || generatorPrefix(data.name!).toUpperCase().trim();
+    const session = await mongoose.startSession();
 
-    const counterKey = `${userId.toString()}-product-${prefix}`;
+    try {
+        return await session.withTransaction(async() => {
+            const prefix = data.prefix || generatorPrefix(data.name!);
 
-    const seq = await getNextSequence(counterKey);
+            const normalizedPrefix = prefix.toUpperCase().trim();
 
-    const productCode = await `${prefix}-${String(seq).padStart(3, "0")}`;
+            const counterKey = `${userId.toString()}-product-${normalizedPrefix}`;
 
-    const product = new Product({
-        userId,
-        name: data.name,
-        prefix,
-        productCode,
-        codeFormat: data.codeFormat,
-        category: data.category,
-        lowStockThreshold: data.lowStockThreshold,
-        hasExpiry: data.hasExpiry
-    });
+            const seq = await getNextSequence(counterKey, session);
 
-    return product.save();
+            const productCode = `${normalizedPrefix}-${String(seq).padStart(3, "0")}`;
+
+            const [product] = await Product.create([{
+                userId,
+                name: data.name,
+                productCode,
+                codeFormat: data.codeFormat,
+                category: data.category,
+                mrp: data.mrp,
+                lowStockThreshold: data.lowStockThreshold,
+                hasExpiry: data.hasExpiry
+            }], { session });
+
+            return product;
+        });
+    } finally {
+        session.endSession();
+    }
 };
 
-export const getAllProducts = async (userId: string) => {
-    return await Product.find({ userId, isActive: true });
+export const updateProduct = async(
+    userId: mongoose.Types.ObjectId,
+    productId: mongoose.Types.ObjectId,
+    data: UpdateProductDTO
+   
+) => {
+    const product =  await Product.findOneAndUpdate(
+        { userId, _id: productId, isActive: true },
+        { $set: data },
+        { returnDocument: "after" },
+    );
+
+    if(!product) {
+    throw new notFoundError("Product not found");
+    }
+
+    return product;
 };
 
-export const getProductById = async (id: string, userId: string) => {
-    return await Product.findOne({ _id: id, userId });
+export const getAllProducts = async (userId: mongoose.Types.ObjectId) => {
+    return await Product.find({ userId, isActive: true }).lean();
 };
 
-export const softDeleteProduct = async (id: string, userId: string) => {
-    return await Product.findOneAndUpdate(
-        { _id: id, userId },
+export const getProductById = async (userId: mongoose.Types.ObjectId, productId: mongoose.Types.ObjectId) => {
+    const product = await Product.findOne({ userId, _id: productId, isActive: true });
+
+    if(!product) {
+        throw new notFoundError("Product not found");
+    }
+
+    return product;
+};
+
+export const softDeleteProduct = async (userId: mongoose.Types.ObjectId, productId: mongoose.Types.ObjectId) => {
+    const product = await Product.findOneAndUpdate(
+        { userId, _id: productId, isActive: true },
         {
             isActive: false,
             deletedAt: new Date()
         },
         { returnDocument: "after" }
     );
+
+    if(!product) {
+        throw new notFoundError("Product not found");
+    }
+
+    return product;
 };

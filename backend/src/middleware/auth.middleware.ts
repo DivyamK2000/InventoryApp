@@ -1,15 +1,21 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import User from "../modules/users/user.model";
+import mongoose from "mongoose";
 
 const JWT_SECRET =  process.env.JWT_SECRET || "classified";
 
 export interface AuthRequest extends Request {
     user?: {
-        id: string;
+        id: mongoose.Types.ObjectId;
     };
 }
 
-export const authMiddleware = ( req: AuthRequest, res: Response, next: NextFunction ) => {
+interface JwtPayload {
+    userId: string;
+}
+
+export const authMiddleware = async( req: AuthRequest, res: Response, next: NextFunction ) => {
     const authHeader =  req.headers.authorization;
 
     if(!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -21,9 +27,19 @@ export const authMiddleware = ( req: AuthRequest, res: Response, next: NextFunct
     const token = authHeader.split(" ")[1];
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string};
+        const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-        req.user = { id: decoded.userId };
+        const user = await User.findById(decoded.userId);
+
+        if(!user) {
+            return res.status(401).json({
+                message: "Unauthorized: User no longer exists"
+            });
+        }
+
+        req.user = {
+            id: new mongoose.Types.ObjectId(decoded.userId)
+        };
 
         next();
     }
