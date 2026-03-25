@@ -9,8 +9,8 @@ backend/apiTest/
 # ==============================
 # Environment Variables
 # ==============================
-backend/.env
 .env.*
+backend/.env
 !.env.example
 
 # ==============================
@@ -78,3 +78,5 @@ Thumbs.db
 # ==============================
 backend/mongo-init.js
 backend/start-mongo.ps1
+backend/.env
+backend/.env
