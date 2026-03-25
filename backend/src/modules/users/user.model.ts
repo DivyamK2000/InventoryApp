@@ -5,6 +5,7 @@ export interface IUser extends Document {
     email: string;
     passwordHash: string;
     createdAt: Date;
+    isActive?: boolean;
     deletedAt?: Date;
 }
 
@@ -25,7 +26,13 @@ const UserSchema: Schema = new Schema(
 
         passwordHash: {
             type: String,
-            required: true
+            required: true,
+            select: false
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true
         },
 
         deletedAt: {

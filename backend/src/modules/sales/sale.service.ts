@@ -22,7 +22,8 @@ export const createSale = async(
             const lots = await Lot.find({
                 userId,
                 productId,
-                quantityRemaining: { $gt: 0 }
+                quantityRemaining: { $gt: 0 },
+                isActive: true
             })
             .sort({ purchaseDate: 1 })
             .session(session);

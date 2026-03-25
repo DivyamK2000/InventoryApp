@@ -9,7 +9,6 @@ const router = Router();
 router.post(
     "/",
     authMiddleware,
-    validateRequest(createSaleSchema),
     createSaleController
 );
 

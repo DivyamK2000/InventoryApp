@@ -4,17 +4,14 @@ import { generateToken } from "../../config/jwt";
 import {
     createUser,
     loginUser,
-    findUserByEmail
 } from "./user.service";
+import { validateRequest } from "../../utils/validateRequests";
+import { createUserSchema, loginUserSchema } from "./user.validation";
 
 export const createUserController = asyncHandler(async(req: Request, res: Response) => {
-    const { name, email, password } = req.body
+    const body = validateRequest(createUserSchema, req.body);
 
-    const user = await createUser({
-        name,
-        email,
-        password
-    });
+    const user = await createUser(body);
 
     res.status(201).json({
         id: user._id,
@@ -24,21 +21,18 @@ export const createUserController = asyncHandler(async(req: Request, res: Respon
 });
 
 export const loginUserController = asyncHandler(async(req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const body = validateRequest(loginUserSchema, req.body);
 
-    const user = await loginUser({
-        email,
-        password
-    });
+    const user = await loginUser(body);
 
     const token = generateToken(user._id.toString());
 
     res.json({
-        token,
         user: {
             id: user._id,
             name: user.name,
             email: user.email
-        }
+        },
+        token
     })
 })

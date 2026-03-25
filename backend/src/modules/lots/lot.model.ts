@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, CallbackWithoutResultAndOptionalError } from "mongoose";
+import { calcExpiry } from "../../utils/calculateExpiry";
 
 export interface ILot extends Document {
     userId: mongoose.Types.ObjectId;
@@ -14,8 +15,9 @@ export interface ILot extends Document {
         unit: "day" | "week" | "month" | "year";
     };
     expiryDate?: Date;
+    isActive: boolean;
     createdAt: Date;
-    
+    deletedAt?: Date;
 }
 
 const LotSchema = new Schema<ILot>(
@@ -74,6 +76,16 @@ const LotSchema = new Schema<ILot>(
         expiryDate: {
             type: Date,
             required: false
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true
+        },
+
+        deletedAt: {
+            type: Date,
+            default: null
         }
     },
     {
@@ -82,34 +94,18 @@ const LotSchema = new Schema<ILot>(
 );
 
 LotSchema.pre<ILot>("save" as any, async function() {
+    if(this.expiryDate) return;
+
     if(!this.mfd || !this.bestBefore?.value || !this.bestBefore?.unit) return;
 
-    const expiry = new Date(this.mfd);
-
-
-
-    const { value, unit } = this.bestBefore;
-
-    switch(unit) {
-        case "day":
-            expiry.setDate(expiry.getDate() + value);
-            break;
-        case "week":
-            expiry.setDate(expiry.getDate() + value*7);
-            break;
-        case "month":
-            expiry.setMonth(expiry.getMonth() + value);
-            break;
-        case "year":
-            expiry.setFullYear(expiry.getFullYear() + value);
-            break;
-    }
-
-    this.expiryDate = expiry;
+    this.expiryDate = calcExpiry({
+        mfd: this.mfd,
+        bestBefore: this.bestBefore
+    });
 });
 
 LotSchema.index(
-    { userId: 1, lotCode: 1},
+    { userId: 1, productId: 1, lotCode: 1},
     {unique: true}
 );
 

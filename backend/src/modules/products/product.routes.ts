@@ -34,8 +34,8 @@ router.get(
     authMiddleware,
     getProductByIdController
 );
-router.delete(
-    "/:id",
+router.patch(
+    "/:id/soft-delete",
     authMiddleware,
     deleteProductController
 );

@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import Product from "./product.model";
 import { CreateProductDTO, UpdateProductDTO } from "./product.validation";
 import { getNextSequence } from "../counters/counter.service";
-import { notFoundError } from "../../utils/appError";
+import { NotFoundError } from "../../utils/appError";
 
 const generatorPrefix = (name: string): string => {
     if (!name) return "PRD";
@@ -77,21 +77,27 @@ export const updateProduct = async(
     );
 
     if(!product) {
-    throw new notFoundError("Product not found");
+    throw new NotFoundError("Product not found");
     }
 
     return product;
 };
 
 export const getAllProducts = async (userId: mongoose.Types.ObjectId) => {
-    return await Product.find({ userId, isActive: true }).lean();
+    const product = await Product.find({ userId, isActive: true }).lean();
+
+    if(!product) {
+        throw new NotFoundError("User does not have any product");
+    }
+
+    return product;
 };
 
 export const getProductById = async (userId: mongoose.Types.ObjectId, productId: mongoose.Types.ObjectId) => {
     const product = await Product.findOne({ userId, _id: productId, isActive: true });
 
     if(!product) {
-        throw new notFoundError("Product not found");
+        throw new NotFoundError("Product not found");
     }
 
     return product;
@@ -108,7 +114,7 @@ export const softDeleteProduct = async (userId: mongoose.Types.ObjectId, product
     );
 
     if(!product) {
-        throw new notFoundError("Product not found");
+        throw new NotFoundError("Product not found");
     }
 
     return product;

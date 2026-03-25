@@ -1,12 +1,16 @@
-import User, { IUser } from "./user.model";
+import User from "./user.model";
 import bcrypt from "bcrypt";
 import { registerUserDTO, loginUserDTO } from "./user.validation";
+import { BadRequestError, NotFoundError } from "../../utils/appError";
+import mongoose from "mongoose";
 
 export const createUser = async(data: registerUserDTO) => {
     const existingUser = await findUserByEmail(data.email);
 
     if(existingUser){
-        throw new Error("User already exists");
+        throw new BadRequestError("User already exists", {
+            email: "This email is already registered"
+        });
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
@@ -22,10 +26,13 @@ export const createUser = async(data: registerUserDTO) => {
 
 export const loginUser = async(data: loginUserDTO) => {
     if(!data.email || !data.password) {
-        throw new Error("Password & E-mail can not be empty!");
+        throw new BadRequestError("Validation Failed", {
+            email: !data.email ? "Email is required" : undefined,
+            password: !data.password ? "Password is required" : undefined
+        });
     }
 
-    const user = await findUserByEmail(data.email);
+    const user = await findUserByEmail(data.email.toLowerCase());
 
     if(!user) {
         throw new Error("Invalid credentials!");
@@ -34,16 +41,28 @@ export const loginUser = async(data: loginUserDTO) => {
     const isValid = await bcrypt.compare(data.password, user.passwordHash);
 
     if(!isValid) {
-        throw new Error("Invalid credentials!");
+        throw new BadRequestError("Invalid credentials!");
     }
 
     return user
 }
 
 export const findUserByEmail = async(email: string) => {
-    return User.findOne({ email });
+    const user = await User.findOne({ email, isActive: true }).select("+passwordHash");
+
+    if(!user) {
+        throw new NotFoundError("User not found");
+    }
+
+    return user;
 };
 
-export const findUserById = async(id: string) => {
-    return User.findById(id);
+export const findUserById = async(userId: mongoose.Types.ObjectId) => {
+    const user = await User.findById({ _id: userId, isActive: true });
+
+    if(!user) {
+        throw new NotFoundError("User not found");
+    }
+
+    return user;
 };
