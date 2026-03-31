@@ -11,6 +11,7 @@ import {
 import { createProductSchema, productIdParamSchema, updateProductSchema } from "./product.validation";
 import { validateRequest } from "../../utils/validateRequests";
 
+
 export const createProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
 
@@ -22,6 +23,8 @@ export const createProductController = asyncHandler(async (req: AuthRequest, res
     );
 
     res.status(201).json({
+        success: true,
+        message: "Product created",
         data: product
     });
 });
@@ -42,15 +45,23 @@ export const updateProductController = asyncHandler(async (req: AuthRequest, res
         body
     )
 
-    res.status(200).json(product);
+    res.status(200).json({
+        success: true,
+        message: "Product updated",
+        data: product
+    });
 })
 
-export const getAllProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const getAllProductsController = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
 
     const products = await getAllProducts(userId);
 
-    res.status(200).json(products);
+    res.status(200).json({
+        success: true,
+        message: "Products fetched",
+        data: products
+    });
 });
 
 export const getProductByIdController = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -66,7 +77,11 @@ export const getProductByIdController = asyncHandler(async (req: AuthRequest, re
         productId
     );
 
-    res.status(200).json(product);
+    res.status(200).json({
+        success: true,
+        message: "Product fetched",
+        data: product
+    });
 });
 
 export const deleteProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -82,10 +97,9 @@ export const deleteProductController = asyncHandler(async (req: AuthRequest, res
         productId
     );
 
-    if(!product) {
-        res.status(404);
-        throw new Error("Product not found");
-    }
-
-    res.status(200).json({ message: "Product deleted", product });
+    res.status(200).json({ 
+        success: true,
+        message: "Product deleted",
+        data: product 
+    });
 });

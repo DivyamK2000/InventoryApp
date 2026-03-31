@@ -3,7 +3,7 @@ import { validateRequest } from "../../utils/validateRequests";
 import { authMiddleware } from "../../middleware/auth.middleware";
 import {
     createProductController,
-    getAllProductController,
+    getAllProductsController,
     getProductByIdController,
     deleteProductController,
     updateProductController
@@ -18,7 +18,7 @@ router.post(
 );
 
 router.patch(
-    "/",
+    "/:id",
     authMiddleware,
     updateProductController
 );
@@ -26,7 +26,7 @@ router.patch(
 router.get(
     "/",
     authMiddleware,
-    getAllProductController
+    getAllProductsController
 );
 
 router.get(
@@ -34,8 +34,8 @@ router.get(
     authMiddleware,
     getProductByIdController
 );
-router.patch(
-    "/:id/soft-delete",
+router.delete(
+    "/:id",
     authMiddleware,
     deleteProductController
 );

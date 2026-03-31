@@ -1,18 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { appError } from "../utils/appError";
 
-const formatZodError = (errorTree: any) => {
-    const foramtted: Record<string, string> = {};
-
-    if(errorTree?.properties) {
-        for(const key in errorTree.properties) {
-            foramtted[key] = errorTree.properties[key]?.errors?.[0] || "Invalid value";
-        }
-    }
-
-    return foramtted;
-};
-
 export const errorHandler = (
     err: any,
     req: Request,
@@ -20,11 +8,27 @@ export const errorHandler = (
     next: NextFunction
 ) => {
     // ZOD/custom validation error
-    if(err.status === 400 && err.message === "Validation Failed") {
+    if(err.statusCode === 400 && err.message === "Validation Failed") {
         return res.status(400).json({
             success: false,
             message: err.message,
-            errors: formatZodError(err.errors)
+            errorCode: err.errorCode,
+            ...(err.errors && { errors: err.errors })
+        });
+    }
+
+    // Duplicate error
+    if(err.code === 11000) {
+        const field = Object.keys(err.keyValue)[0];
+
+        return res.status(400).json({
+            success: false,
+            message: `${field} already exists`,
+            errorCode: "DUPLICATE_RESOURCE",
+            errors: {
+                field,
+                value: err.keyValue[field]
+            }
         });
     }
 
@@ -33,6 +37,7 @@ export const errorHandler = (
         return res.status(err.statusCode).json({
             success: false,
             message: err.message,
+            errorCode: err.errorCode,
             ...(err.errors && { errors: err.errors })
         });
     }
@@ -49,6 +54,7 @@ export const errorHandler = (
 
     res.status(500).json({
         success: false,
-        message: err.message || "Internal Server Error"
+        message: err.message || "Internal Server Error",
+        errorCode: "INTERNAL_SERVER_ERROR"
     });
 };

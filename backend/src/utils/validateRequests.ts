@@ -18,7 +18,7 @@ export const validateRequest = <T>( schema: ZodType<T>, source: unknown ): T => 
             }
         }
         
-        throw new BadRequestError("Validation Failed", formattedErrors);
+        throw new BadRequestError("Validation Failed", "VALIDATION_FAILED", formattedErrors);
     }
 
     return validatedData.data

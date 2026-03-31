@@ -11,11 +11,11 @@ const objectIdSchema = z.string()
 export const createProductSchema = z.object({
     name: z.string().trim().min(2, "Product name must be at least 2 characters").max(120),
 
-    prefix: z.string().min(2).max(4).optional()
+    productCode: z.string().min(2).max(10).optional()
         .transform(val => val?.toUpperCase().trim()),
     category: z.string().trim().optional(),
 
-    mrp: z.number().nonnegative().optional(),
+    mrp: z.number().nonnegative(),
     codeFormat: z.enum(["barcode", "qr"]),
     lowStockThreshold: z.number().int().min(0).optional(),
     hasExpiry: z.boolean().optional().transform(val => val ?? false)
@@ -23,7 +23,7 @@ export const createProductSchema = z.object({
 
 export const updateProductSchema = z.object({
     category: z.string().trim().optional(),
-    mrp: z.number().nonnegative().optional(),
+    mrp: z.number().nonnegative(),
     lowStockThreshold: z.number().int().min(0).optional(),
     hasExpiry: z.boolean().optional().transform(val => val ?? false)
 });

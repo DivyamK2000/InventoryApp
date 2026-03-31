@@ -5,7 +5,7 @@ import { BadRequestError, NotFoundError } from "../../utils/appError";
 import mongoose from "mongoose";
 
 export const createUser = async(data: registerUserDTO) => {
-    const existingUser = await findUserByEmail(data.email);
+    const existingUser = await findUserByEmail(data.email.toLowerCase());
 
     if(existingUser){
         throw new BadRequestError("User already exists", {
@@ -35,7 +35,7 @@ export const loginUser = async(data: loginUserDTO) => {
     const user = await findUserByEmail(data.email.toLowerCase());
 
     if(!user) {
-        throw new Error("Invalid credentials!");
+        throw new BadRequestError("Invalid credentials!");
     }
 
     const isValid = await bcrypt.compare(data.password, user.passwordHash);
@@ -50,15 +50,11 @@ export const loginUser = async(data: loginUserDTO) => {
 export const findUserByEmail = async(email: string) => {
     const user = await User.findOne({ email, isActive: true }).select("+passwordHash");
 
-    if(!user) {
-        throw new NotFoundError("User not found");
-    }
-
     return user;
 };
 
 export const findUserById = async(userId: mongoose.Types.ObjectId) => {
-    const user = await User.findById({ _id: userId, isActive: true });
+    const user = await User.findOne({ _id: userId, isActive: true });
 
     if(!user) {
         throw new NotFoundError("User not found");
@@ -66,3 +62,20 @@ export const findUserById = async(userId: mongoose.Types.ObjectId) => {
 
     return user;
 };
+
+export const softDeleteUser = async(userId: mongoose.Types.ObjectId) => {
+    const user = await User.findOneAndUpdate(
+        { _id: userId, isActive: true },
+        {
+            isActive: false,
+            deletedAt: new Date()
+        },
+        { returnDocument: "after" }
+    );
+
+    if(!user) {
+        throw new NotFoundError("User not found");
+    }
+
+    return user;
+}

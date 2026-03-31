@@ -77,8 +77,20 @@ const ProductSchema: Schema = new Schema(
 );
 
 ProductSchema.index(
+    { userId: 1, name: 1 },
+    { 
+        unique: true,
+        collation: { locale: "en", strength: 2 },
+        partialFilterExpression: { isActive: true }
+    }
+);
+
+ProductSchema.index(
     { userId: 1, productCode: 1 },
-    { unique: true, partialFilterExpression: { isActive: true } }
+    {
+        unique: true,
+        partialFilterExpression: { isActive: true }
+    }
 );
 
 export default mongoose.model<IProduct>("Product", ProductSchema);
