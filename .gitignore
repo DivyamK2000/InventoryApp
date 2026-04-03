@@ -4,6 +4,9 @@
 node_modules/
 backend/node_modules/
 backend/apiTest/
+backend/mongo-init.js
+backend/start-mongo.ps1
+scripts/
 
 # ==============================
 # Environment Variables
