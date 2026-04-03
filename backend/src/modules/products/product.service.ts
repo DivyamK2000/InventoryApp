@@ -1,73 +1,190 @@
 import mongoose from "mongoose";
 import Product from "./product.model";
-import { createProductDTO } from "./product.validation";
-import { getNextSequence } from "../counters/counter.service";
-
-const generatorPrefix = (name: string): string => {
-    if (!name) return "PRD";
-
-    const clean = name
-        .replace(/[^a-zA-Z0-9 ]/g, "")
-        .trim()
-        .toUpperCase();
-
-    const words = clean.split(" ").filter(Boolean);
-
-    if(words.length == 1) {
-        return words[0].slice(0, 3).padEnd(3, "X");
-    }
-
-    const initials = words.map(w => w[0]).join("");
-
-    if(initials.length >= 3) {
-        return initials.slice(0, 3);
-    }
-
-    const combined = words.join("");
-    return combined.slice(0, 3).padEnd(3, "X");
-};
+import { CreateProductDTO, UpdateProductDTO } from "./product.validation";
+import { ProductService } from "../../utils/productcode/ProductService";
+import { BadRequestError, NotFoundError } from "../../utils/AppError";
 
 export const createProduct = async (
-    data: createProductDTO,
-    userId: mongoose.Types.ObjectId
+    userId: mongoose.Types.ObjectId,
+    data: CreateProductDTO
 ) => {
-    const prefix = data.prefix?.toUpperCase().trim() || generatorPrefix(data.name!).toUpperCase().trim();
+    const session = await mongoose.startSession();
 
-    const counterKey = `${userId.toString()}-product-${prefix}`;
+    try {
+        return await session.withTransaction(async() => {
+            const escaped = data.name.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-    const seq = await getNextSequence(counterKey);
+            const existingName = await Product.findOne({
+                userId,
+                isActive: true,
+                name: { $regex: `^${escaped}$`, $options: "i" }
+            }).session(session);
 
-    const productCode = await `${prefix}-${String(seq).padStart(3, "0")}`;
+            if (existingName) {
+                throw new BadRequestError(
+                    "Product with this name already exists",
+                    "PRODUCT_DUPLICATE_NAME",
+                    { field: "name" }
+                );
+            }
 
-    const product = new Product({
-        userId,
-        name: data.name,
-        prefix,
-        productCode,
-        codeFormat: data.codeFormat,
-        category: data.category,
-        lowStockThreshold: data.lowStockThreshold,
-        hasExpiry: data.hasExpiry
-    });
+            let productCode: string;
 
-    return product.save();
+            if(data.productCode) {
+                const normalized = data.productCode.toUpperCase().trim();
+
+                const existingCode = await Product.findOne({
+                    userId,
+                    productCode: normalized,
+                    isActive: true
+                }).session(session);
+
+                if(existingCode) {
+                    throw new BadRequestError(
+                        "Product code already exists",
+                        "PRODUCT_DUPLICATE_CODE",
+                        { field: "productCode" }
+                    );
+                }
+
+                productCode = normalized;
+            } else {
+                const initial = ProductService.resolve(data.name, new Set());
+
+                const baseCode = "code" in initial ? initial.code : undefined;
+
+                if (!baseCode) {
+                    throw new BadRequestError(
+                        "Failed to generate base code",
+                        "PRODUCT_CODE_GENERATION_FAILED"
+                    );
+                }
+
+                const exists =  await Product.findOne({
+                    userId,
+                    productCode: baseCode,
+                    isActive: true
+                }).session(session);
+
+                if(!exists) {
+                    productCode = baseCode;
+                } else {
+                    const similarProducts = await Product.find(
+                        {
+                            userId,
+                            isActive: true,
+                            productCode: { $regex: `^${baseCode[0]}` }
+                        },
+                        {productCode: 1},
+                        { session }
+                    ).lean();
+
+                    const existingCodes = new Set(
+                        similarProducts.map(p => p.productCode)
+                    );
+
+                    const result = ProductService.resolve(
+                        data.name,
+                        existingCodes
+                    );
+
+                    if("code" in result) {
+                        productCode = result.code;
+                    } else {
+                        throw new BadRequestError(
+                            "Unable to auto-generate product code",
+                            "PRODUCT_CODE_GENERATION_FAILED",
+                            {
+                                field: "productCode",
+                                suggestions: result.suggestions
+                            }
+                        );
+                    }
+                }
+            }
+
+            const [product] = await Product.create([{
+                userId,
+                name: data.name.trim(),
+                productCode: productCode,
+                codeFormat: data.codeFormat,
+                category: data.category,
+                mrp: data.mrp,
+                lowStockThreshold: data.lowStockThreshold,
+                hasExpiry: data.hasExpiry
+            }], { session });
+
+            return product;
+        });
+    } finally {
+        session.endSession();
+    }
 };
 
-export const getAllProducts = async (userId: string) => {
-    return await Product.find({ userId, isActive: true });
+export const updateProduct = async(
+    userId: mongoose.Types.ObjectId,
+    productId: mongoose.Types.ObjectId,
+    data: UpdateProductDTO
+   
+) => {
+    if("productCode" in data) {
+        throw new BadRequestError(
+            "Product code cannot be updated",
+            "PRODUCT_CODE_IMMUTABLE"
+        );
+    }
+    
+    const product =  await Product.findOneAndUpdate(
+        { userId, _id: productId, isActive: true },
+        { $set: data },
+        { returnDocument: "after" },
+    ).lean();
+
+    if(!product) {
+        throw new NotFoundError(
+            "Product not found",
+            "PRODUCT_NOT_FOUND"
+        );
+    }
+
+    return product;
 };
 
-export const getProductById = async (id: string, userId: string) => {
-    return await Product.findOne({ _id: id, userId });
+export const getAllProducts = async (userId: mongoose.Types.ObjectId) => {
+    const product = await Product.find({ userId, isActive: true }).lean();
+
+    return product;
 };
 
-export const softDeleteProduct = async (id: string, userId: string) => {
-    return await Product.findOneAndUpdate(
-        { _id: id, userId },
+export const getProductById = async (userId: mongoose.Types.ObjectId, productId: mongoose.Types.ObjectId) => {
+    const product = await Product.findOne({ userId, _id: productId, isActive: true }).lean();
+
+    if(!product) {
+        throw new NotFoundError(
+            "Product not found",
+            "PRODUCT_NOT_FOUND"
+        );
+    }
+
+    return product;
+};
+
+export const softDeleteProduct = async (userId: mongoose.Types.ObjectId, productId: mongoose.Types.ObjectId) => {
+    const product = await Product.findOneAndUpdate(
+        { userId, _id: productId, isActive: true },
         {
             isActive: false,
             deletedAt: new Date()
         },
         { returnDocument: "after" }
-    );
+    ).lean();
+
+    if(!product) {
+        throw new NotFoundError(
+            "Product not found",
+            "PRODUCT_NOT_FOUND"
+        );
+    }
+
+    return product;
 };

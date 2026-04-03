@@ -2,6 +2,7 @@
 # Dependencies
 # ==============================
 node_modules/
+scripts/
 backend/node_modules/
 backend/apiTest/
 backend/mongo-init.js
@@ -11,8 +12,8 @@ scripts/
 # ==============================
 # Environment Variables
 # ==============================
-.env
 .env.*
+backend/.env
 !.env.example
 
 # ==============================
@@ -74,3 +75,11 @@ images/
 # ==============================
 .DS_Store
 Thumbs.db
+
+# ==============================
+# Files
+# ==============================
+backend/mongo-init.js
+backend/start-mongo.ps1
+backend/.env
+backend/.env

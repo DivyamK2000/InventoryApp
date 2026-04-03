@@ -1,16 +1,25 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IMovement extends Document {
+    userId: mongoose.Types.ObjectId;
     productId: mongoose.Types.ObjectId;
-    lotId?: mongoose.Types.ObjectId;
+    lotId: mongoose.Types.ObjectId;
+    lotCode: string;
     type: "purchase" | "sale" | "adjustment";
     quantity: number;
-    reference?: string;
+    reference: string;
+    note?: string;
     createdAt: Date;
 }
 
 const MovementSchema: Schema = new Schema(
     {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
+
         productId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Product",
@@ -19,7 +28,13 @@ const MovementSchema: Schema = new Schema(
 
         lotId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Lot"
+            ref: "Lot",
+            required: true
+        },
+
+        lotCode: {
+            type: String,
+            required: true
         },
 
         type: {
@@ -34,6 +49,11 @@ const MovementSchema: Schema = new Schema(
         },
 
         reference: {
+            type: String,
+            required: true
+        },
+
+        note: {
             type: String
         }
     },
@@ -41,5 +61,8 @@ const MovementSchema: Schema = new Schema(
         timestamps: true
     }
 );
+
+MovementSchema.index({ userId: 1, productId: 1, createdAt: -1 });
+MovementSchema.index({ userId: 1, lotCode: 1 });
 
 export default mongoose.model<IMovement>("Movement", MovementSchema);

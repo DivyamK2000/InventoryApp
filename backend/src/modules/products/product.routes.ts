@@ -3,37 +3,40 @@ import { validateRequest } from "../../utils/validateRequests";
 import { authMiddleware } from "../../middleware/auth.middleware";
 import {
     createProductController,
-    getAllProductController,
+    getAllProductsController,
     getProductByIdController,
-    deleteProductController
+    deleteProductController,
+    updateProductController
 } from "./product.controller";
-import { createProductSchema, productIdParamSchema } from "./product.validation";
 
 const router = Router();
 
 router.post(
     "/",
     authMiddleware,
-    validateRequest(createProductSchema),
     createProductController
+);
+
+router.patch(
+    "/:id",
+    authMiddleware,
+    updateProductController
 );
 
 router.get(
     "/",
     authMiddleware,
-    getAllProductController
+    getAllProductsController
 );
 
 router.get(
     "/:id",
     authMiddleware,
-    validateRequest(productIdParamSchema, "params"), 
     getProductByIdController
 );
 router.delete(
     "/:id",
     authMiddleware,
-    validateRequest(productIdParamSchema, "params"),
     deleteProductController
 );
 

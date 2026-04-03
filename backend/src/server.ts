@@ -9,7 +9,6 @@ import userRoutes from "./modules/users/user.routes";
 import productRoutes from "./modules/products/product.routes";
 import lotRoutes from "./modules/lots/lot.routes";
 import saleRoutes from "./modules/sales/sale.routes";
-import scanRoutes from "./modules/scan/scan.routes";
 import inventoryRoutes from "./modules/inventory/inventory.routes";
 import expressListEndpoints from "express-list-endpoints";
 
@@ -33,7 +32,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/lots", lotRoutes);
 app.use("/api/sales", saleRoutes);
-app.use("/api/scan", scanRoutes);
 app.use("/api/inventory", inventoryRoutes);
 
 app.use(errorHandler); // Global error handler (always after routes are defined)

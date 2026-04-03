@@ -7,4 +7,4 @@ const CounterSchema =  new mongoose.Schema({
     seq: { type: Number, default: 0 }
 });
 
-export default mongoose.model("Counter", CounterSchema);
+export default mongoose.model("Counters", CounterSchema);

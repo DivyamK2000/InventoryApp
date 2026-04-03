@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface ISale extends Document {
+    userId: mongoose.Types.ObjectId,
     productId: mongoose.Types.ObjectId;
     lotId: mongoose.Types.ObjectId;
     quantity: number;
@@ -12,6 +13,13 @@ export interface ISale extends Document {
 
 const SaleSchema: Schema = new Schema(
     {
+        userId: {
+            type: mongoose.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+
         productId: {
             type: mongoose.Types.ObjectId,
             ref: "Product",
@@ -49,6 +57,7 @@ const SaleSchema: Schema = new Schema(
     }
 );
 
-SaleSchema.index({ productId: 1, createdAt: -1 });
+SaleSchema.index({ userId: 1, productId: 1, createdAt: -1 });
+SaleSchema.index({ userId: 1, lotId: 1 });
 
 export default mongoose.model<ISale>("Sale", SaleSchema);

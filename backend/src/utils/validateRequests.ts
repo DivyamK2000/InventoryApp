@@ -1,15 +1,25 @@
-import { Request, Response, NextFunction } from "express";
-import { ZodType } from "zod";
+import { treeifyError, ZodType } from "zod";
+import { BadRequestError } from "./AppError";
 
-export const validateRequest = (
-    schema: ZodType,
-    source: "body" | "params" = "body"
-) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        const validateData = schema.parse(req[source]);
+export const validateRequest = <T>( schema: ZodType<T>, source: unknown ): T => {
+    const validatedData = schema.safeParse(source);
 
-        Object.assign(req[source], validateData);
+    if(!validatedData.success) {
+        const errorTree = treeifyError(validatedData.error);
 
-        next();
-    };
+        const formattedErrors: Record<string, string> = {};
+
+        if("properties" in errorTree && errorTree.properties) {
+            for(const key in errorTree.properties) {
+                const fieldError = errorTree.properties[key];
+                if(fieldError && fieldError.errors?.length) {
+                    formattedErrors[key] = fieldError.errors[0];
+                }
+            }
+        }
+        
+        throw new BadRequestError("Validation Failed", "VALIDATION_FAILED", formattedErrors);
+    }
+
+    return validatedData.data
 };
