@@ -4,9 +4,14 @@ import { AuthRequest } from "../../middleware/auth.middleware";
 import { createBulkLot, createLot, getLotsByProduct, softDeleteLot } from "./lot.service";
 import { createLotSchema, productIdParamSchema, lotIdParamSchema, createBulkLotSchema } from "./lot.validation";
 import { validateRequest } from "../../utils/validateRequests";
+import { UnauthorizedError } from "../../utils/AppError";
 
 export const createLotController = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+    if(!req.user) {
+        throw new UnauthorizedError("Unauthorized", "AUTH_UNAUTHORIZED");
+    }
+
+    const userId = req.user.id;
     
     const { productId } = validateRequest(
         productIdParamSchema,
@@ -25,7 +30,11 @@ export const createLotController = asyncHandler(async (req: AuthRequest, res: Re
 });
 
 export const createBulkLotsController = asyncHandler(async(req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+    if(!req.user) {
+        throw new UnauthorizedError("Unauthorized", "AUTH_UNAUTHORIZED");
+    }
+
+    const userId = req.user.id;
 
     const { productId } = validateRequest(
         productIdParamSchema,
@@ -40,7 +49,11 @@ export const createBulkLotsController = asyncHandler(async(req: AuthRequest, res
 })
 
 export const getLotsByProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+    if(!req.user) {
+        throw new UnauthorizedError("Unauthorized", "AUTH_UNAUTHORIZED");
+    }
+    
+    const userId = req.user.id;
 
     const { productId } = validateRequest(
         productIdParamSchema,
@@ -53,7 +66,11 @@ export const getLotsByProductController = asyncHandler(async (req: AuthRequest, 
 });
 
 export const softDeleteLotController = asyncHandler(async(req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+    if(!req.user) {
+        throw new UnauthorizedError("Unauthorized", "AUTH_UNAUTHORIZED");
+    }
+    
+    const userId = req.user.id;
 
     const { productId } = validateRequest(
         productIdParamSchema,

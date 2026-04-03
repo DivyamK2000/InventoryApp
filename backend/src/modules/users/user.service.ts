@@ -1,7 +1,7 @@
 import User from "./user.model";
 import bcrypt from "bcrypt";
 import { registerUserDTO, loginUserDTO } from "./user.validation";
-import { BadRequestError, NotFoundError } from "../../utils/appError";
+import { BadRequestError, NotFoundError } from "../../utils/AppError";
 import mongoose from "mongoose";
 
 export const createUser = async(data: registerUserDTO) => {

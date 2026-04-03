@@ -93,10 +93,12 @@ const LotSchema = new Schema<ILot>(
     }
 );
 
-LotSchema.pre<ILot>("save" as any, async function() {
+LotSchema.pre("save", async function() {
     if(this.expiryDate) return;
 
-    if(!this.mfd || !this.bestBefore?.value || !this.bestBefore?.unit) return;
+    if(!this.mfd || !this.bestBefore?.value || !this.bestBefore?.unit) {
+        return;
+    } 
 
     this.expiryDate = calcExpiry({
         mfd: this.mfd,

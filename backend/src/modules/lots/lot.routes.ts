@@ -16,12 +16,12 @@ router.post(
 );
 
 router.post(
-    "/:productId",
+    "/:productId/bulk",
     authMiddleware,
     createBulkLotsController
 )
 
-router.get("/:productId/bulk",
+router.get("/:productId",
     authMiddleware,
     getLotsByProductController
 );

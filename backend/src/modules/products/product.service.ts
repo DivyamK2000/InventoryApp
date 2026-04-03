@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import Product from "./product.model";
 import { CreateProductDTO, UpdateProductDTO } from "./product.validation";
 import { ProductService } from "../../utils/productcode/ProductService";
-import { BadRequestError, NotFoundError } from "../../utils/appError";
+import { BadRequestError, NotFoundError } from "../../utils/AppError";
 
 export const createProduct = async (
     userId: mongoose.Types.ObjectId,

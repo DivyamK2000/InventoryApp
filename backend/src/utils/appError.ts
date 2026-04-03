@@ -1,4 +1,4 @@
-export class appError extends Error {
+export class AppError extends Error {
     statusCode: number;
     errorCode: string;
     isOperational: boolean;
@@ -11,6 +11,9 @@ export class appError extends Error {
         errors?: any
     ) {
         super(message);
+
+        Object.setPrototypeOf(this, new.target.prototype);
+
         this.statusCode = statusCode;
         this.errorCode = errorCode;
         this.isOperational = true;
@@ -20,7 +23,7 @@ export class appError extends Error {
     }
 }
 
-export class NotFoundError extends appError {
+export class NotFoundError extends AppError {
     constructor(
         message = "Resource not found",
         errorCode = "RESOURCE_NOT_FOUND"
@@ -29,12 +32,30 @@ export class NotFoundError extends appError {
     }
 }
 
-export class BadRequestError extends appError {
+export class BadRequestError extends AppError {
     constructor(
         message = "Bad Request",
-        errorCode = "BAD_REQUEST",
+        errorCode = "BAD_REQUEST_ERROR",
         errors?: any
     ) {
         super(message, 400, errorCode, errors);
+    }
+}
+
+export class UnauthorizedError extends AppError {
+    constructor(
+        message = "Unauthorized",
+        errorCode = "AUTH_UNAUTHORIZED"
+    ) {
+        super(message, 401, errorCode);
+    }
+}
+
+export class ForbiddenError extends AppError {
+    constructor(
+        message = "Forbidden",
+        errorCode = "AUTH_FORBIDDEN"
+    ) {
+        super(message, 403, errorCode);
     }
 }

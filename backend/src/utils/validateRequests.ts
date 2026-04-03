@@ -1,5 +1,5 @@
 import { treeifyError, ZodType } from "zod";
-import { BadRequestError } from "./appError";
+import { BadRequestError } from "./AppError";
 
 export const validateRequest = <T>( schema: ZodType<T>, source: unknown ): T => {
     const validatedData = schema.safeParse(source);

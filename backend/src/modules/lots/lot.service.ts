@@ -4,8 +4,9 @@ import { createMovement, createMovementBulk } from "../movements/movement.servic
 import Product from "../products/product.model";
 import { createBulkLotDTO, CreateLotDTO } from "./lot.validation";
 import { getNextSequence, getNextSequenceRange } from "../counters/counter.service";
-import { BadRequestError, NotFoundError } from "../../utils/appError";
+import { BadRequestError, NotFoundError } from "../../utils/AppError";
 import { CreateMovementDTO } from "../movements/movement.validation";
+import { calcExpiry } from "../../utils/calculateExpiry";
 
 export const createLot = async (
     userId: mongoose.Types.ObjectId,
@@ -23,7 +24,10 @@ export const createLot = async (
             }).session(session);
 
             if(!product) {
-                throw new NotFoundError("Product not found");
+                throw new NotFoundError(
+                    "Product not found",
+                    "PRODUCT_NOT_FOUND"
+                );
             }
 
             const { 
@@ -53,12 +57,18 @@ export const createLot = async (
 
             const lotCode = `${product.productCode}-L${String(seq).padStart(3, "0")}`;
 
-            if(product.hasExpiry && !expiryDate && !bestBefore) {
-                throw new BadRequestError("Expiry required for this product");
+            if(product.hasExpiry && !data.expiryDate && !data.bestBefore) {
+                throw new BadRequestError(
+                    "Expiry required for this product",
+                    "EXPIRY_FIELD_REQUIRED"
+                );
             }
 
             if(!product.hasExpiry && (expiryDate || mfd || bestBefore)) {
-                throw new BadRequestError("This product does not support expiry");
+                throw new BadRequestError(
+                    "This product does not support expiry",
+                    "EXPIRY_NOT_SUPPORTED"
+                );
             }
 
             const lotData = {
@@ -88,9 +98,17 @@ export const createLot = async (
     
             return lot;
         });
-    }
+    } catch(err: any) {
+        if(err.code === 11000) {
+            throw new BadRequestError(
+                "Lot code already exists",
+                "LOT_DUPLICATE_CODE",
+                err.keyValue
+            );
+        }
 
-    finally {
+        throw err;
+    } finally {
         session.endSession();
     }
 };
@@ -111,7 +129,10 @@ export const createBulkLot = async(
             }).session(session);
 
             if(!product) {
-                throw new NotFoundError("Product not found");
+                throw new NotFoundError(
+                    "Product not found",
+                    "PRODUCT_NOT_FOUND"
+                );
             }
 
             const { groups } = data;
@@ -126,7 +147,10 @@ export const createBulkLot = async(
             const totalLots = groups.reduce((sum, g) => sum + g.count, 0);
 
             if(totalLots === 0) {
-                throw new BadRequestError("No lots to create");
+                throw new BadRequestError(
+                    "No lots to create", 
+                    "INVALID_INPUT"
+                );
             }
 
             const counterKey =  `${userId.toString()}-lot-${productId.toString()}`;
@@ -134,11 +158,17 @@ export const createBulkLot = async(
             const { start } = await getNextSequenceRange(counterKey, totalLots, session);
 
             if(product.hasExpiry && groups.some(g => !g.expiryDate && !g.bestBefore)) {
-                throw new BadRequestError("Expiry required for this product");
+                throw new BadRequestError(
+                    "Expiry required for this product", 
+                    "EXPIRY_FIELD_REQUIRED"
+                );
             }
 
             if(!product.hasExpiry && groups.some(g => g.expiryDate || g.bestBefore)) {
-                throw new BadRequestError("This product does not support expiry");
+                throw new BadRequestError(
+                    "This product does not support expiry", 
+                    "EXPIRY_NOT_SUPPORTED"
+                );
             }
 
             const lotsData = expandedLots.map((lot, index) => {
@@ -165,7 +195,12 @@ export const createBulkLot = async(
 
                     ...(mfd && { mfd: mfd }),
                     ...(bestBefore && { bestBefore: bestBefore }),
-                    ...(expiryDate && { expiryDate: expiryDate })
+                    
+                    expiryDate: expiryDate ?? (
+                        mfd && bestBefore
+                            ? calcExpiry({ mfd, bestBefore })
+                            : undefined
+                    )
                 };
             });
 
@@ -185,9 +220,17 @@ export const createBulkLot = async(
 
             return lots;
         });
-    }
-
-    finally {
+    } catch(err: any) {
+        if(err.code === 11000) {
+            throw new BadRequestError(
+                "One or more lot code already exists",
+                "LOT_DUPLICATE_CODE",
+                err.keyValue
+            );
+        }
+        
+        throw err;
+    } finally {
         session.endSession();
     }
 }
@@ -203,7 +246,10 @@ export const getLotsByProduct = async (
     });
 
     if(!product) {
-        throw new NotFoundError("Product not found or unauthorized");
+        throw new NotFoundError(
+            "Product not found",
+            "PRODUCT_NOT_FOUND"
+        );
     }
 
     const lots = await Lot.find({
@@ -229,11 +275,10 @@ export const softDeleteLot = async(
     );
 
     if(!lot) {
-        throw new NotFoundError("Lot not found");
-    }
-
-    if(!lot.isActive) {
-        throw new BadRequestError("Lot already deleted");
+        throw new NotFoundError(
+            "Lot already deleted or does not exist",
+            "LOT_NOT_FOUND"
+        )
     }
 
     return lot;
