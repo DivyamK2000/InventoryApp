@@ -17,12 +17,11 @@ export const getNextSequence = async(
 export const getNextSequenceRange = async(
     prefix: string,
     count: number,
-    session: mongoose.ClientSession
 ) => {
     const counter = await Counter.findByIdAndUpdate(
         prefix,
         {inc: { seq: count }},
-        { returnDocument: "after", upsert: true, session }
+        { returnDocument: "after", upsert: true }
     );
 
     const end = counter.seq;

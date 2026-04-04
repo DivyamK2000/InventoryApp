@@ -75,7 +75,7 @@ export const createLotSchema = z.object({
 });
 
 const bulkLotSchema = z.object({
-    count: z.number().int().positive(),
+    count: z.number().int().positive().max(10000),
     purchasePrice: z.number().positive(),
     quantityInitial: z.number().int().positive(),
 

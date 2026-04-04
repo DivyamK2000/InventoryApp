@@ -1,10 +1,11 @@
 import { Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { AuthRequest } from "../../middleware/auth.middleware";
-import { createBulkLot, createLot, getLotsByProduct, softDeleteLot } from "./lot.service";
+import { createBulkLots, createLot, getLotsByProduct, softDeleteLot } from "./lot.service";
 import { createLotSchema, productIdParamSchema, lotIdParamSchema, createBulkLotSchema } from "./lot.validation";
 import { validateRequest } from "../../utils/validateRequests";
 import { UnauthorizedError } from "../../utils/AppError";
+
 
 export const createLotController = asyncHandler(async (req: AuthRequest, res: Response) => {
     if(!req.user) {
@@ -26,7 +27,11 @@ export const createLotController = asyncHandler(async (req: AuthRequest, res: Re
         body
     );
 
-    res.status(201).json(lot);
+    res.status(201).json({
+        success: true,
+        message: "Lot created",
+        data: lot
+    });
 });
 
 export const createBulkLotsController = asyncHandler(async(req: AuthRequest, res: Response) => {
@@ -43,9 +48,13 @@ export const createBulkLotsController = asyncHandler(async(req: AuthRequest, res
 
     const body = validateRequest(createBulkLotSchema, req.body);
 
-    const lots = await createBulkLot(userId, productId, body);
+    const lots = await createBulkLots(userId, productId, body);
 
-    res.status(201).json(lots);
+    res.status(201).json({
+        success: true,
+        message: "Lots processed",
+        data: lots
+    });
 })
 
 export const getLotsByProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -62,7 +71,10 @@ export const getLotsByProductController = asyncHandler(async (req: AuthRequest, 
     
     const lots = await getLotsByProduct(userId, productId);
 
-    res.status(200).json(lots);
+    res.status(200).json({
+        success: true,
+        data: lots
+    });
 });
 
 export const softDeleteLotController = asyncHandler(async(req: AuthRequest, res: Response) => {
@@ -84,5 +96,9 @@ export const softDeleteLotController = asyncHandler(async(req: AuthRequest, res:
 
     const lot = await softDeleteLot(userId, productId, lotId);
 
-    res.status(200).json(lot);
+    res.status(200).json({
+        success: true,
+        message: "Lot deleted",
+        data: lot
+    });
 })

@@ -53,7 +53,7 @@ export const createProduct = async (
 
                 const baseCode = "code" in initial ? initial.code : undefined;
 
-                if (!baseCode) {
+                if (!baseCode || baseCode.length === 0) {
                     throw new BadRequestError(
                         "Failed to generate base code",
                         "PRODUCT_CODE_GENERATION_FAILED"

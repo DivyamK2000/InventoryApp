@@ -5,19 +5,33 @@ import { BadRequestError, NotFoundError } from "../../utils/AppError";
 import mongoose from "mongoose";
 
 export const createUser = async(data: registerUserDTO) => {
-    const existingUser = await findUserByEmail(data.email.toLowerCase());
+    const email = data.email.toLowerCase();
+    const existingUser = await findUserByEmail(email);
 
     if(existingUser){
-        throw new BadRequestError("User already exists", {
-            email: "This email is already registered"
-        });
+        if(!existingUser.isActive) {
+            throw new BadRequestError(
+                "Account recently deleted. Please restore your account to continue",
+                "AUTH_ACCOUNT_SOFT_DELETED",
+                 {
+                    email: "This email is associated with a recently deleted account. Please restore your account to continue"
+                }
+            )
+        }
+        throw new BadRequestError(
+            "User already exists",
+            "AUTH_USER_ALREADY_EXISTS", 
+            {
+                email: "This email is already registered",
+            }
+        );
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
     const user = new User({
         name: data.name,
-        email: data.email,
+        email,
         passwordHash
     });
     
@@ -25,29 +39,36 @@ export const createUser = async(data: registerUserDTO) => {
 };
 
 export const loginUser = async(data: loginUserDTO) => {
-    if(!data.email || !data.password) {
-        throw new BadRequestError("Validation Failed", {
-            email: !data.email ? "Email is required" : undefined,
-            password: !data.password ? "Password is required" : undefined
-        });
-    }
+    const email = data.email.toLowerCase();
 
-    const user = await findUserByEmail(data.email.toLowerCase());
+    const user = await findUserByEmailWithPassword(email);
 
     if(!user) {
-        throw new BadRequestError("Invalid credentials!");
+        throw new BadRequestError(
+            "Invalid credentials!",
+            "AUTH_INVALID_CREDENTIALS"
+        );
     }
 
     const isValid = await bcrypt.compare(data.password, user.passwordHash);
 
     if(!isValid) {
-        throw new BadRequestError("Invalid credentials!");
+        throw new BadRequestError(
+            "Invalid credentials!",
+            "AUTH_INVALID_CREDENTIALS"
+        );
     }
 
     return user
 }
 
 export const findUserByEmail = async(email: string) => {
+    const user = await User.findOne({ email });
+
+    return user;
+};
+
+export const findUserByEmailWithPassword = async(email: string) => {
     const user = await User.findOne({ email, isActive: true }).select("+passwordHash");
 
     return user;
@@ -57,7 +78,10 @@ export const findUserById = async(userId: mongoose.Types.ObjectId) => {
     const user = await User.findOne({ _id: userId, isActive: true });
 
     if(!user) {
-        throw new NotFoundError("User not found");
+        throw new NotFoundError(
+            "User not found",
+            "USER_NOT_FOUND"
+        );
     }
 
     return user;
@@ -70,11 +94,14 @@ export const softDeleteUser = async(userId: mongoose.Types.ObjectId) => {
             isActive: false,
             deletedAt: new Date()
         },
-        { returnDocument: "after" }
+        { new: true }
     );
 
     if(!user) {
-        throw new NotFoundError("User not found");
+        throw new NotFoundError(
+            "User not found",
+            "USER_NOT_FOUND"
+        );
     }
 
     return user;

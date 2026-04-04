@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, CallbackWithoutResultAndOptionalError } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 import { calcExpiry } from "../../utils/calculateExpiry";
 
 export interface ILot extends Document {
@@ -93,7 +93,11 @@ const LotSchema = new Schema<ILot>(
     }
 );
 
-LotSchema.pre("save", async function() {
+LotSchema.pre("save", function() {
+    if(!this.isModified("mfd") && !this.isModified("bestBefore")) {
+        return;
+    }
+
     if(this.expiryDate) return;
 
     if(!this.mfd || !this.bestBefore?.value || !this.bestBefore?.unit) {
@@ -108,7 +112,10 @@ LotSchema.pre("save", async function() {
 
 LotSchema.index(
     { userId: 1, productId: 1, lotCode: 1},
-    {unique: true}
+    {
+        unique: true,
+        partialFilterExpression: { isActive: true }
+    }
 );
 
 LotSchema.index({ userId: 1, expiryDate: 1 });
