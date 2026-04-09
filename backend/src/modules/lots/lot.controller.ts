@@ -5,6 +5,7 @@ import { createBulkLots, createLot, getLotsByProduct, softDeleteLot } from "./lo
 import { createLotSchema, productIdParamSchema, lotIdParamSchema, createBulkLotSchema } from "./lot.validation";
 import { validateRequest } from "../../utils/validateRequests";
 import { UnauthorizedError } from "../../utils/AppError";
+import { SendResponse } from "../../utils/SendResponse";
 
 
 export const createLotController = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -50,11 +51,12 @@ export const createBulkLotsController = asyncHandler(async(req: AuthRequest, res
 
     const lots = await createBulkLots(userId, productId, body);
 
-    res.status(201).json({
-        success: true,
-        message: "Lots processed",
-        data: lots
-    });
+    return SendResponse(
+        res,
+        201,
+        "Lots processed",
+        lots
+    );
 })
 
 export const getLotsByProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -71,10 +73,12 @@ export const getLotsByProductController = asyncHandler(async (req: AuthRequest, 
     
     const lots = await getLotsByProduct(userId, productId);
 
-    res.status(200).json({
-        success: true,
-        data: lots
-    });
+    return SendResponse(
+        res,
+        200,
+        "Lots fetched",
+        lots
+    );
 });
 
 export const softDeleteLotController = asyncHandler(async(req: AuthRequest, res: Response) => {
@@ -96,9 +100,10 @@ export const softDeleteLotController = asyncHandler(async(req: AuthRequest, res:
 
     const lot = await softDeleteLot(userId, productId, lotId);
 
-    res.status(200).json({
-        success: true,
-        message: "Lot deleted",
-        data: lot
-    });
+    return SendResponse(
+        res,
+        200,
+        "Lot deleted",
+        lot
+    );
 })

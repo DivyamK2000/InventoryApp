@@ -10,6 +10,7 @@ import {
 } from "./product.service";
 import { createProductSchema, productIdParamSchema, updateProductSchema } from "./product.validation";
 import { validateRequest } from "../../utils/validateRequests";
+import { SendResponse } from "../../utils/SendResponse";
 
 
 export const createProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -22,11 +23,12 @@ export const createProductController = asyncHandler(async (req: AuthRequest, res
         body
     );
 
-    res.status(201).json({
-        success: true,
-        message: "Product created",
-        data: product
-    });
+    return SendResponse(
+        res,
+        201,
+        "Product created",
+        product
+    );
 });
 
 export const updateProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -45,23 +47,25 @@ export const updateProductController = asyncHandler(async (req: AuthRequest, res
         body
     )
 
-    res.status(200).json({
-        success: true,
-        message: "Product updated",
-        data: product
-    });
-})
+    return SendResponse(
+        res,
+        200,
+        "Product updated",
+        product
+    );
+});
 
 export const getAllProductsController = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
 
     const products = await getAllProducts(userId);
 
-    res.status(200).json({
-        success: true,
-        message: "Products fetched",
-        data: products
-    });
+    return SendResponse(
+        res,
+        200,
+        "Products fetched",
+        products
+    );
 });
 
 export const getProductByIdController = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -77,11 +81,12 @@ export const getProductByIdController = asyncHandler(async (req: AuthRequest, re
         productId
     );
 
-    res.status(200).json({
-        success: true,
-        message: "Product fetched",
-        data: product
-    });
+    return SendResponse(
+        res,
+        200,
+        "Product fetched",
+        product
+    );
 });
 
 export const deleteProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -97,9 +102,10 @@ export const deleteProductController = asyncHandler(async (req: AuthRequest, res
         productId
     );
 
-    res.status(200).json({ 
-        success: true,
-        message: "Product deleted",
-        data: product 
-    });
+    return SendResponse(
+        res,
+        200,
+        "Product deleted",
+        product
+    );
 });

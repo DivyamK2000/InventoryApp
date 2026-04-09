@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
+import Product from "../products/product.model";
 import Lot from "../lots/lot.model";
 import Sale from "./sale.model";
 import { createMovement } from "../movements/movement.service";
 import { CreateSaleDTO } from "./sale.validation";
+import { BadRequestError } from "../../utils/AppError";
 
 export const createSale = async(
     userId: mongoose.Types.ObjectId,
@@ -10,26 +12,62 @@ export const createSale = async(
     data: CreateSaleDTO
 ) => {
     if(data.quantity <= 0) {
-        throw new Error("Quantity must be greater than 0")
+        throw new BadRequestError(
+            "Quantity must be greater than 0",
+            "SALE_INVALID_QUANTITY",
+            { field: "quantity" }
+        );
     }
     
     const session = await mongoose.startSession();
 
     try {
         return await session.withTransaction(async() => {
+            const saleGroupId = new mongoose.Types.ObjectId();
+
+            const product = await Product.findOne({
+                _id: productId,
+                userId,
+                isActive: true
+            }).session(session);
+
+            if(!product) {
+                throw new BadRequestError(
+                    "Product not found",
+                    "PRODUCT_NOT_FOUND"
+                );
+            }
+
+            let sortCondition: Record<string, 1 | -1>;
+
+            if (product.hasExpiry) {
+                sortCondition = { expiryDate: 1 };
+            } else {
+                sortCondition = { purchaseDate: 1 };
+            }
+
             let remainingQuantity = data.quantity;
 
-            const lots = await Lot.find({
+            const lotQuery: any = {
                 userId,
                 productId,
                 quantityRemaining: { $gt: 0 },
                 isActive: true
-            })
-            .sort({ purchaseDate: 1 })
-            .session(session);
+            };
+
+            if(product.hasExpiry) {
+                lotQuery.expiryDate = { $gt : new Date() };
+            }
+
+            const lots = await Lot.find(lotQuery)
+                .sort(sortCondition)
+                .session(session);
 
             if(lots.length === 0) {
-                throw new Error("No Stock Available");
+                throw new BadRequestError(
+                    "No Stock Available",
+                    "INVENTORY_OUT_OF_STOCK"
+                );
             }
 
             const salesRecords = [];
@@ -49,6 +87,7 @@ export const createSale = async(
                 const sale = await Sale.create([{
                     userId,
                     productId,
+                    saleGroupId,
                     lotId: lot._id,
                     quantity: quantityFromLot,
                     purchasePrice,
@@ -68,7 +107,7 @@ export const createSale = async(
                     quantity: -quantityFromLot,
                     lotId: lot._id,
                     lotCode: lot.lotCode,
-                    reference: `SAL:${sale[0]._id}`,
+                    reference: `SAL:${saleGroupId}`,
                     note: data.note
                 }, session);
 
@@ -79,11 +118,19 @@ export const createSale = async(
             }
 
             if(remainingQuantity > 0) {
-                throw new Error("Insufficient stock");
+                throw new BadRequestError(
+                    "Insufficient stock",
+                    "INVENTORY_INSUFFICIENT_STOCK",
+                    {
+                        requested: data.quantity,
+                        available: data.quantity - remainingQuantity
+                    }
+                );
             }
 
             return {
                 summary: {
+                    saleGroupId,
                     totalQuantity: data.quantity,
                     totalRevenue,
                     totalProfit,

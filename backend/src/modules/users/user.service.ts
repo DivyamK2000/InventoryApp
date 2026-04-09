@@ -80,7 +80,7 @@ export const findUserById = async(userId: mongoose.Types.ObjectId) => {
     if(!user) {
         throw new NotFoundError(
             "User not found",
-            "USER_NOT_FOUND"
+            "AUTH_USER_NOT_FOUND"
         );
     }
 

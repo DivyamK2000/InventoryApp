@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface ISale extends Document {
     userId: mongoose.Types.ObjectId,
     productId: mongoose.Types.ObjectId;
+    saleGroupId: mongoose.Types.ObjectId;
     lotId: mongoose.Types.ObjectId;
     quantity: number;
     purchasePrice: number;
@@ -24,6 +25,12 @@ const SaleSchema: Schema = new Schema(
             type: mongoose.Types.ObjectId,
             ref: "Product",
             required: true,
+        },
+
+        saleGroupId: {
+            type: mongoose.Types.ObjectId,
+            required: true,
+            index: true
         },
 
         lotId: {
