@@ -15,6 +15,7 @@ export const createUserController = asyncHandler(async(req: Request, res: Respon
     const user = await createUser(body);
 
     return SendResponse(
+        req,
         res,
         201,
         "User created",
@@ -34,6 +35,7 @@ export const loginUserController = asyncHandler(async(req: Request, res: Respons
     const token = generateToken(user._id.toString());
 
     return SendResponse(
+        req,
         res,
         200,
         "Login successful",

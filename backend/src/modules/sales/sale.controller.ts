@@ -20,6 +20,7 @@ export const createSaleController = asyncHandler(async(req: AuthRequest, res: Re
     );
 
     return SendResponse(
+        req,
         res,
         201,
         "Sale created",

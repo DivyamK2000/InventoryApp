@@ -24,6 +24,7 @@ export const createProductController = asyncHandler(async (req: AuthRequest, res
     );
 
     return SendResponse(
+        req,
         res,
         201,
         "Product created",
@@ -48,6 +49,7 @@ export const updateProductController = asyncHandler(async (req: AuthRequest, res
     )
 
     return SendResponse(
+        req,
         res,
         200,
         "Product updated",
@@ -61,6 +63,7 @@ export const getAllProductsController = asyncHandler(async (req: AuthRequest, re
     const products = await getAllProducts(userId);
 
     return SendResponse(
+        req,
         res,
         200,
         "Products fetched",
@@ -82,6 +85,7 @@ export const getProductByIdController = asyncHandler(async (req: AuthRequest, re
     );
 
     return SendResponse(
+        req,
         res,
         200,
         "Product fetched",
@@ -103,6 +107,7 @@ export const deleteProductController = asyncHandler(async (req: AuthRequest, res
     );
 
     return SendResponse(
+        req,
         res,
         200,
         "Product deleted",

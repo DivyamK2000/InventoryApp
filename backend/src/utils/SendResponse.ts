@@ -1,6 +1,8 @@
-import { Response } from "express"
+import { Request, Response } from "express";
+import { randomUUID } from "crypto";
 
 export const SendResponse = (
+    req: Request,
     res: Response,
     statusCode: number,
     message: string,
@@ -9,6 +11,12 @@ export const SendResponse = (
     return res.status(statusCode).json({
         success: true,
         message,
-        ...(data && { data })
+        ...(data && { data }),
+        meta: {
+            requestId: req.requestId,
+            timeStamp: new Date().toISOString(),
+            path: req.originalUrl,
+            method: req.method
+        }
     });
 };

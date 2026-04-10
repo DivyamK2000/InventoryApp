@@ -28,11 +28,13 @@ export const createLotController = asyncHandler(async (req: AuthRequest, res: Re
         body
     );
 
-    res.status(201).json({
-        success: true,
-        message: "Lot created",
-        data: lot
-    });
+    return SendResponse(
+        req,
+        res,
+        201,
+        "Lot created",
+        lot
+    );
 });
 
 export const createBulkLotsController = asyncHandler(async(req: AuthRequest, res: Response) => {
@@ -52,6 +54,7 @@ export const createBulkLotsController = asyncHandler(async(req: AuthRequest, res
     const lots = await createBulkLots(userId, productId, body);
 
     return SendResponse(
+        req,
         res,
         201,
         "Lots processed",
@@ -74,6 +77,7 @@ export const getLotsByProductController = asyncHandler(async (req: AuthRequest, 
     const lots = await getLotsByProduct(userId, productId);
 
     return SendResponse(
+        req,
         res,
         200,
         "Lots fetched",
@@ -101,6 +105,7 @@ export const softDeleteLotController = asyncHandler(async(req: AuthRequest, res:
     const lot = await softDeleteLot(userId, productId, lotId);
 
     return SendResponse(
+        req,
         res,
         200,
         "Lot deleted",

@@ -6,13 +6,19 @@ export const errorHandler = (
     res: Response,
     next: NextFunction
 ) => {
+    const getMeta = (req: Request) => ({
+        requestId: req.requestId,
+        timestamp: new Date().toISOString()
+    });
+
     // ZOD/custom validation error
-    if(err.statusCode === 400 && err.message === "Validation Failed") {
+    if(err.errorCode === "VALIDATION_FAILED") {
         return res.status(400).json({
             success: false,
             message: err.message,
             errorCode: err.errorCode,
-            ...(err.errors && { errors: err.errors })
+            ...(err.errors && { errors: err.errors }),
+            meta: getMeta(req)
         });
     }
 
@@ -23,11 +29,12 @@ export const errorHandler = (
         return res.status(400).json({
             success: false,
             message: `${field} already exists`,
-            errorCode: "DUPLICATE_RESOURCE",
+            errorCode: err.errorCode || "DATABASE_DUPLICATE_ERROR",
             errors: {
                 field,
                 value: err.keyValue[field]
-            }
+            },
+            meta: getMeta(req)
         });
     }
 
@@ -37,7 +44,8 @@ export const errorHandler = (
             success: false,
             message: err.message,
             errorCode: err.errorCode,
-            ...(err.errors && { errors: err.errors })
+            ...(err.errors && { errors: err.errors }),
+            meta: getMeta(req)
         });
     }
 
@@ -45,7 +53,9 @@ export const errorHandler = (
     if(err.type === "entity.parse.failed") {
         return res.status(400).json({
             success: false,
-            message: "Invalid JSON Format"
+            message: "Invalid JSON Format",
+            errorCode: "INVALID_JSON_FORMAT",
+            meta: getMeta(req)
         });
     }
 
@@ -53,7 +63,8 @@ export const errorHandler = (
 
     res.status(500).json({
         success: false,
-        message: err.message || "Internal Server Error",
-        errorCode: "INTERNAL_SERVER_ERROR"
+        message: "Internal Server Error",
+        errorCode: "INTERNAL_SERVER_ERROR",
+        meta: getMeta(req)
     });
 };
