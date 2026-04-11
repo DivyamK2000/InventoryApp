@@ -14,7 +14,7 @@ export const SendResponse = (
         ...(data && { data }),
         meta: {
             requestId: req.requestId,
-            timeStamp: new Date().toISOString(),
+            timestamp: new Date().toISOString(),
             path: req.originalUrl,
             method: req.method
         }

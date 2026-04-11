@@ -20,6 +20,9 @@ backend/.env
 # Logs
 # ==============================
 logs/
+backend/src/logs/
+bakend/src/logs/error
+backend/src/logs/info
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -79,7 +82,6 @@ Thumbs.db
 # ==============================
 # Files
 # ==============================
-backend/mongo-init.js
-backend/start-mongo.ps1
-backend/.env
-backend/.env
+mongo-init.js
+start-mongo.ps1
+nodemon.json
