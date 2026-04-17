@@ -3,11 +3,9 @@
 # ==============================
 node_modules/
 scripts/
-backend/node_modules/
-backend/apiTest/
-backend/mongo-init.js
-backend/start-mongo.ps1
+node_modules/
 scripts/
+API_Test_/
 
 # ==============================
 # Environment Variables

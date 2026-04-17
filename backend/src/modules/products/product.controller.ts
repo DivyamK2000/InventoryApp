@@ -9,12 +9,17 @@ import {
     updateProduct
 } from "./product.service";
 import { createProductSchema, productIdParamSchema, updateProductSchema } from "./product.validation";
+import { UnauthorizedError } from "../../utils/AppError";
 import { validateRequest } from "../../utils/validateRequests";
 import { SendResponse } from "../../utils/SendResponse";
 
 
-export const createProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+export const createProductController = asyncHandler(async(req: AuthRequest, res: Response) => {
+    if(!req.user) {
+        throw new UnauthorizedError("Unauthorized", "AUTH_UNAUTHORIZED");
+    }
+
+    const userId = req.user.id;
 
     const body = validateRequest(createProductSchema, req.body);
 
@@ -32,8 +37,12 @@ export const createProductController = asyncHandler(async (req: AuthRequest, res
     );
 });
 
-export const updateProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+export const updateProductController = asyncHandler(async(req: AuthRequest, res: Response) => {
+    if(!req.user) {
+        throw new UnauthorizedError("Unauthorized", "AUTH_UNAUTHORIZED");
+    }
+
+    const userId = req.user.id;
 
     const { id: productId } = validateRequest(
         productIdParamSchema,
@@ -57,8 +66,12 @@ export const updateProductController = asyncHandler(async (req: AuthRequest, res
     );
 });
 
-export const getAllProductsController = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+export const getAllProductsController = asyncHandler(async(req: AuthRequest, res: Response) => {
+    if(!req.user) {
+        throw new UnauthorizedError("Unauthorized", "AUTH_UNAUTHORIZED");
+    }
+
+    const userId = req.user.id;
 
     const products = await getAllProducts(userId);
 
@@ -72,7 +85,11 @@ export const getAllProductsController = asyncHandler(async (req: AuthRequest, re
 });
 
 export const getProductByIdController = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+    if(!req.user) {
+        throw new UnauthorizedError("Unauthorized", "AUTH_UNAUTHORIZED");
+    }
+
+    const userId = req.user.id;
     
     const { id: productId } = validateRequest(
         productIdParamSchema,
@@ -94,7 +111,11 @@ export const getProductByIdController = asyncHandler(async (req: AuthRequest, re
 });
 
 export const deleteProductController = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+    if(!req.user) {
+        throw new UnauthorizedError("Unauthorized", "AUTH_UNAUTHORIZED");
+    }
+
+    const userId = req.user.id;
     
     const { id: productId } = validateRequest(
         productIdParamSchema,

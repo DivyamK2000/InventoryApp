@@ -1,18 +1,23 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler";
-import { generateToken } from "../../config/jwt";
+
 import {
     createUser,
     loginUser,
+    updateUserProfile,
+    updateUserPassword,
+    softDeleteUser
 } from "./user.service";
 import { validateRequest } from "../../utils/validateRequests";
-import { createUserSchema, loginUserSchema } from "./user.validation";
+import { createUserSchema, loginUserSchema, updateUserProfileSchema, updateUserPasswordSchema } from "./user.validation";
 import { SendResponse } from "../../utils/SendResponse";
+import { AuthRequest } from "../../middleware/auth.middleware";
+import { UnauthorizedError } from "../../utils/AppError";
 
 export const createUserController = asyncHandler(async(req: Request, res: Response) => {
     const body = validateRequest(createUserSchema, req.body);
 
-    const user = await createUser(body);
+    const result = await createUser(body);
 
     return SendResponse(
         req,
@@ -20,9 +25,9 @@ export const createUserController = asyncHandler(async(req: Request, res: Respon
         201,
         "User created",
         {
-            id: user._id,
-            name: user.name,
-            email: user.email
+            id: result._id,
+            name: result.name,
+            email: result.email
         }
     );
 });
@@ -30,22 +35,78 @@ export const createUserController = asyncHandler(async(req: Request, res: Respon
 export const loginUserController = asyncHandler(async(req: Request, res: Response) => {
     const body = validateRequest(loginUserSchema, req.body);
 
-    const user = await loginUser(body);
-
-    const token = generateToken(user._id.toString());
+    const result = await loginUser(body);
 
     return SendResponse(
         req,
         res,
         200,
         "Login successful",
-        {
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email
-            },
-            token
-        }
+        result
+    );
+});
+
+export const updateUserProfileController = asyncHandler(async(req: AuthRequest, res: Response) => {
+    if(!req.user) {
+        throw new UnauthorizedError(
+            "Unauthorized",
+            "AUTH_UNAUTHORIZED"
+        );
+    }
+    
+    const userId = req.user.id;
+    const body = validateRequest(updateUserProfileSchema, req.body);
+    
+    const result = await updateUserProfile(userId, body);
+
+    return SendResponse(
+        req,
+        res,
+        200,
+        "User details updated",
+        result
+    );
+});
+
+export const updateUserPasswordController = asyncHandler(async(req: AuthRequest, res: Response) => {
+    if(!req.user) {
+        throw new UnauthorizedError(
+            "Unauthorized",
+            "AUTH_UNAUTHORIZED"
+        );
+    }
+
+    const userId = req.user.id;
+    const body = validateRequest(updateUserPasswordSchema, req.body);
+
+    const result = await updateUserPassword(userId, body);
+
+    return SendResponse(
+        req,
+        res,
+        200,
+        "User password updated",
+        result
+    );
+});
+
+export const softDeleteUserController = asyncHandler(async(req: AuthRequest, res: Response) => {
+    if(!req.user) {
+        throw new UnauthorizedError(
+            "Unauthorized",
+            "AUTH_UNAUTHORIZED"
+        );
+    }
+
+    const userId = req.user.id;
+
+    const result = await softDeleteUser(userId);
+
+    return SendResponse(
+        req,
+        res,
+        200,
+        "User deleted",
+        result
     );
 })

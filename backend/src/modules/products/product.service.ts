@@ -137,7 +137,7 @@ export const updateProduct = async(
     const product =  await Product.findOneAndUpdate(
         { userId, _id: productId, isActive: true },
         { $set: data },
-        { returnDocument: "after" },
+        { returnDocument: "after" }
     ).lean();
 
     if(!product) {

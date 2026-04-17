@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+// Export Product interface 
 export interface IProduct extends Document {
     userId: mongoose.Types.ObjectId;
     name: string;
@@ -14,6 +15,7 @@ export interface IProduct extends Document {
     deletedAt?: Date;
 }
 
+// Defines Product collection in DB to store "product" with defined fields
 const ProductSchema: Schema = new Schema(
     {
         userId: {
@@ -76,6 +78,7 @@ const ProductSchema: Schema = new Schema(
     { timestamps: true }
 );
 
+// Index to easily lookup userId & name
 ProductSchema.index(
     { userId: 1, name: 1 },
     { 
@@ -85,6 +88,7 @@ ProductSchema.index(
     }
 );
 
+// Index to easily lookup userId & product code
 ProductSchema.index(
     { userId: 1, productCode: 1 },
     {

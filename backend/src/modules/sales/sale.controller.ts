@@ -5,9 +5,14 @@ import { AuthRequest } from "../../middleware/auth.middleware";
 import { validateRequest } from "../../utils/validateRequests";
 import { createSaleSchema, productIdParamSchema } from "./sale.validation";
 import { SendResponse } from "../../utils/SendResponse";
+import { UnauthorizedError } from "../../utils/AppError";
 
 export const createSaleController = asyncHandler(async(req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+    if(!req.user) {
+        throw new UnauthorizedError("Unauthorized", "AUTH_UNAUTHORIZED");
+    }
+
+    const userId = req.user.id;
 
     const { productId } = validateRequest(productIdParamSchema, req.params)
 
