@@ -9,7 +9,7 @@
     "strict": true,
     "skipLibCheck": true,
 
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "types": ["node"]
   }
 }
