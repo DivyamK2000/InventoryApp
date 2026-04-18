@@ -28,7 +28,11 @@ app.use(express.json());
 
 app.get("/", (req, res) => {
     req.log.info("Root endpoint hit");
-    res.send("MeraInventory API is running");
+    res.json({
+      name: "Mera Inventory API",
+      status: "live",
+      version: "1.0.0"
+    })
 });
 
 app.get("/health", (req, res) => {
